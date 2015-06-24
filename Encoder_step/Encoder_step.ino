@@ -1,3 +1,32 @@
+
+/*
+
+This code allows manual reading of an AS5145 type encoder over SPI
+amd manual stepping of a stepper motor for the purpose of creating 
+a lookup table for the encoder.  It is controlled via a serial 
+terminal at 115200 baud.
+
+Implemented commands are:
+
+p  -  print [step count] , [assumed angle] , [encoder reading]
+
+c  -  clear step count & assumed angle
+
+s  -  step
+
+d  -  dir toggle
+
+
+
+
+
+*/
+
+
+#include <EEPROM.h>
+
+
+
 const int ledPin = 13; //LED connected to digital pin 13
 const int clockPin = 7; //output to clock
 const int CSnPin = 6; //output to chip select
@@ -24,6 +53,11 @@ int debug = 1; //SET THIS TO 0 TO DISABLE PRINTING OF ERROR CODES
 int shortdelay = 100; // this is the microseconds of delay in the data clock
 int longdelay = 10; // this is the milliseconds between readings
 
+
+int i_step = 0; // step index
+int i_w = 0;// write index
+int i_r = 0; // read index
+
 void setup()
 {
   Serial.begin(115200);
@@ -41,27 +75,34 @@ void setup()
 void loop()
 {
   while (Serial.available()) {
-    // get the new byte:
+
     char inChar = (char)Serial.read();
-    // add it to the inputString:
-    //inputString += inChar;
-    // if the incoming character is a newline, set a flag
-    // so the main loop can do something about it:
+    
+    
+    
     if (inChar == 'p') {
-      //stringComplete = true;
       readEncoder();
     }
     
-    if (inChar == 's') {
-      //stringComplete = true;
+    
+    else if (inChar == 's') {
+      if (!digitalRead(dirPin)) {
+        i_step += 1;
+      }
+      else {
+        i_step -= 1;
+      }
       digitalWrite(stepPin, HIGH);
       delay(10);
       digitalWrite(stepPin, LOW);
     }
     
-        if (inChar == 'd') {
-      //stringComplete = true;
+    else if (inChar == 'd') {
        digitalWrite(dirPin, !digitalRead(dirPin));
+    }
+    else if (inChar == 'c') {
+       i_step = 0;
+       i_w = 0;
     }
     
     
@@ -118,7 +159,12 @@ void readEncoder()
 //Serial.println(angle, DEC);
 //angle = angle * 0.3515; // angle * (360/1024) == actual degrees
   anglefloat = angle * 0.08789; // angle * (360/4096) == actual degrees
-  Serial.print("angle: "); // and, finally, print it.
+  //Serial.print("angle: "); // and, finally, print it.
+  
+  Serial.print(i_step,DEC);
+  Serial.print(" , ");
+  Serial.print(i_step*0.9,DEC);
+  Serial.print(" , ");
   Serial.println(anglefloat, DEC);
 //Serial.println("--------------------");
 //Serial.print("raw: "); // this was the prefix for the bit-by-bit diag output inside the loop.
@@ -144,6 +190,12 @@ void readEncoder()
   angle = 0;
 }
 
+
+
+
+
+
+//Below is kept for reference (an alternate encoder read implementation)
 
 
 
