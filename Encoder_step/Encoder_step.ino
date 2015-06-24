@@ -16,6 +16,10 @@ s  -  step
 
 d  -  dir toggle
 
+z  -  seek zero position
+
+g  -  Go! steps around 400 times
+
 
 
 
@@ -40,6 +44,10 @@ int inputstream = 0; //one bit read from pin
 long packeddata = 0; //two bytes concatenated from inputstream
 long angle = 0; //holds processed angle value
 float anglefloat = 0; 
+
+float a = 0.00000000000;  //angle value in zero routine
+float offset = 0.000000000000000; //zero-offest of closest full step
+
 //long anglemask = 65472; //0x1111111111000000: mask to obtain first 10 digits with position info
 long anglemask = 262080; // 0x111111111111000000: mask to obtain first 12 digits with position info
 long statusmask = 63; //0x000000000111111; mask to obtain last 6 digits containing status info
@@ -81,7 +89,13 @@ void loop()
     
     
     if (inChar == 'p') {
-      readEncoder();
+      a = readEncoder();
+      
+        Serial.print(i_step,DEC);
+        Serial.print(" , ");
+        Serial.print(i_step*0.9,DEC);
+        Serial.print(" , ");
+        Serial.println(a-offset, DEC);
     }
     
     
@@ -95,6 +109,13 @@ void loop()
       digitalWrite(stepPin, HIGH);
       delay(10);
       digitalWrite(stepPin, LOW);
+        
+        a = readEncoder();
+        Serial.print(i_step,DEC);
+        Serial.print(" , ");
+        Serial.print(i_step*0.9,DEC);
+        Serial.print(" , ");
+        Serial.println(a-offset, DEC);
     }
     
     else if (inChar == 'd') {
@@ -105,16 +126,53 @@ void loop()
        i_w = 0;
     }
     
-    
-    
-
-    
-  }
+    else if (inChar == 'z') {
+      a = readEncoder();
+      while (a >= 0.9) {
+          if (!digitalRead(dirPin)) {
+          i_step += 1;
+        }
+        else {
+          i_step -= 1;
+        }
+        digitalWrite(stepPin, HIGH);
+        delay(10);
+        digitalWrite(stepPin, LOW);
+        delay(10);
+        a = readEncoder();
+        Serial.println(a,DEC);                
+      }
+      delay(100);
+      offset = readEncoder();
+     }
+     else if (inChar == 'g') {
+       for(int x = 0; x < 400; x++){
+        if (!digitalRead(dirPin)) {
+          i_step += 1;
+        }
+        else {
+          i_step -= 1;
+        }
+        digitalWrite(stepPin, HIGH);
+        delay(10);
+        digitalWrite(stepPin, LOW);
+        delay(10);
+        a = readEncoder();
+        Serial.print(i_step,DEC);
+        Serial.print(" , ");
+        Serial.print(i_step*0.9,DEC);
+        Serial.print(" , ");
+        Serial.println(a-offset, DEC);
+       }
+     } 
+       
+     
+     
 }
 
+}
 
-
-void readEncoder()
+float readEncoder()
 {
 // CSn needs to cycle from high to low to initiate transfer. Then clock cycles. As it goes high
 // again, data will appear on sda
@@ -161,11 +219,14 @@ void readEncoder()
   anglefloat = angle * 0.08789; // angle * (360/4096) == actual degrees
   //Serial.print("angle: "); // and, finally, print it.
   
-  Serial.print(i_step,DEC);
-  Serial.print(" , ");
-  Serial.print(i_step*0.9,DEC);
-  Serial.print(" , ");
-  Serial.println(anglefloat, DEC);
+//  Serial.print(i_step,DEC);
+//  Serial.print(" , ");
+//  Serial.print(i_step*0.9,DEC);
+//  Serial.print(" , ");
+//  Serial.println(anglefloat-offset, DEC);
+  
+  
+  
 //Serial.println("--------------------");
 //Serial.print("raw: "); // this was the prefix for the bit-by-bit diag output inside the loop.
   if (debug)
@@ -188,6 +249,8 @@ void readEncoder()
 
   packeddata = 0; // reset both variables to zero so they don't just accumulate
   angle = 0;
+  
+  return anglefloat;
 }
 
 
