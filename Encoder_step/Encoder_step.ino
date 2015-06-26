@@ -20,6 +20,9 @@ z  -  seek zero position
 
 g  -  Go! steps around 400 times
 
+w  -  Same as go, but stores encoder angles to EEPROM
+
+r  - returns EEPROM contents
 
 
 
@@ -43,9 +46,10 @@ const int dirPin = 5;
 int inputstream = 0; //one bit read from pin
 long packeddata = 0; //two bytes concatenated from inputstream
 long angle = 0; //holds processed angle value
+long angletemp;
 float anglefloat = 0; 
 
-float a = 0.00000000000;  //angle value in zero routine
+int a = 0;  //angle value in zero routine
 float offset = 0.000000000000000; //zero-offest of closest full step
 
 //long anglemask = 65472; //0x1111111111000000: mask to obtain first 10 digits with position info
@@ -90,12 +94,13 @@ void loop()
     
     if (inChar == 'p') {
       a = readEncoder();
-      
+        anglefloat = a * 0.08789;
         Serial.print(i_step,DEC);
         Serial.print(" , ");
         Serial.print(i_step*0.9,DEC);
         Serial.print(" , ");
-        Serial.println(a-offset, DEC);
+        //Serial.println(a-offset, DEC);
+        Serial.println(anglefloat, DEC);
     }
     
     
@@ -111,11 +116,15 @@ void loop()
       digitalWrite(stepPin, LOW);
         
         a = readEncoder();
+        anglefloat = a * 0.08789;
         Serial.print(i_step,DEC);
         Serial.print(" , ");
         Serial.print(i_step*0.9,DEC);
         Serial.print(" , ");
-        Serial.println(a-offset, DEC);
+        Serial.print(a,DEC);
+        Serial.print(" , ");
+         //Serial.println(a-offset, DEC);
+        Serial.println(anglefloat, DEC);
     }
     
     else if (inChar == 'd') {
@@ -128,7 +137,8 @@ void loop()
     
     else if (inChar == 'z') {
       a = readEncoder();
-      while (a >= 0.9) {
+      anglefloat = a * 0.08789;
+      while (anglefloat >= 0.9) {
           if (!digitalRead(dirPin)) {
           i_step += 1;
         }
@@ -140,7 +150,8 @@ void loop()
         digitalWrite(stepPin, LOW);
         delay(10);
         a = readEncoder();
-        Serial.println(a,DEC);                
+        anglefloat = a * 0.08789;
+        Serial.println(anglefloat,DEC);                
       }
       delay(100);
       offset = readEncoder();
@@ -156,15 +167,58 @@ void loop()
         digitalWrite(stepPin, HIGH);
         delay(10);
         digitalWrite(stepPin, LOW);
-        delay(10);
+        delay(50);
         a = readEncoder();
-        Serial.print(i_step,DEC);
-        Serial.print(" , ");
-        Serial.print(i_step*0.9,DEC);
-        Serial.print(" , ");
-        Serial.println(a-offset, DEC);
+        anglefloat = a * 0.08789;
+        //Serial.print(i_step,DEC);
+        //Serial.print(" , ");
+        //Serial.print(i_step*0.9,DEC);
+        //Serial.print(" , ");
+        //Serial.println(a-offset, DEC);
+        Serial.println(anglefloat, DEC);
        }
      } 
+     
+     else if (inChar == 'w') {
+       for(int x = 0; x < 400; x++){
+        if (!digitalRead(dirPin)) {
+          i_step += 1;
+        }
+        else {
+          i_step -= 1;
+        }
+        digitalWrite(stepPin, HIGH);
+        delay(10);
+        digitalWrite(stepPin, LOW);
+        delay(50);
+        a = readEncoder();
+        i_w = 2*x;
+        EEPROM.put(i_w,a);
+        
+        anglefloat = a * 0.08789;
+        //Serial.print(i_step,DEC);
+        //Serial.print(" , ");
+        //Serial.print(i_step*0.9,DEC);
+        //Serial.print(" , ");
+        //Serial.println(a-offset, DEC);
+        Serial.println(anglefloat, DEC);
+       }
+     }    
+      else if (inChar == 'r') {
+       for(int x = 0; x < 400; x++){
+        i_r = 2*x;
+       
+        EEPROM.get(i_r,a);
+        
+        anglefloat = a * 0.08789;
+        //Serial.print(i_step,DEC);
+        //Serial.print(" , ");
+        //Serial.print(i_step*0.9,DEC);
+        //Serial.print(" , ");
+        //Serial.println(a-offset, DEC);
+        Serial.println(anglefloat, DEC);
+       }
+     }    
        
      
      
@@ -172,7 +226,7 @@ void loop()
 
 }
 
-float readEncoder()
+int readEncoder()
 {
 // CSn needs to cycle from high to low to initiate transfer. Then clock cycles. As it goes high
 // again, data will appear on sda
@@ -216,7 +270,8 @@ float readEncoder()
 //Serial.print("angledec: ");
 //Serial.println(angle, DEC);
 //angle = angle * 0.3515; // angle * (360/1024) == actual degrees
-  anglefloat = angle * 0.08789; // angle * (360/4096) == actual degrees
+  //anglefloat = angle * 0.08789; // angle * (360/4096) == actual degrees
+  angletemp = angle;
   //Serial.print("angle: "); // and, finally, print it.
   
 //  Serial.print(i_step,DEC);
@@ -250,7 +305,8 @@ float readEncoder()
   packeddata = 0; // reset both variables to zero so they don't just accumulate
   angle = 0;
   
-  return anglefloat;
+//  return anglefloat;
+return angletemp;
 }
 
 
