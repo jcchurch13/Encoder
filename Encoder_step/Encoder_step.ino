@@ -99,6 +99,8 @@ void loop()
         Serial.print(" , ");
         Serial.print(i_step*0.9,DEC);
         Serial.print(" , ");
+        Serial.print(a,DEC);
+        Serial.print(" , ");
         //Serial.println(a-offset, DEC);
         Serial.println(anglefloat, DEC);
     }
@@ -114,6 +116,7 @@ void loop()
       digitalWrite(stepPin, HIGH);
       delay(10);
       digitalWrite(stepPin, LOW);
+      delay(10);
         
         a = readEncoder();
         anglefloat = a * 0.08789;
@@ -224,6 +227,24 @@ void loop()
      
 }
 
+}
+
+
+
+
+
+void step(){
+
+if (!digitalRead(dirPin)) {
+        i_step += 1;
+      }
+      else {
+        i_step -= 1;
+      }
+      digitalWrite(stepPin, HIGH);
+      delay(10);
+      digitalWrite(stepPin, LOW);
+      delay(10);
 }
 
 int readEncoder()
