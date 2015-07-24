@@ -95,7 +95,7 @@ void update_angle()
       }
       
       
-      delay(20);
+      delay(1);
       Serial.print(current_angle);
       Serial.print(" , ");
       Serial.print(val1,DEC);
@@ -119,6 +119,7 @@ void update_angle()
       else  {
         digitalWrite(IN1, LOW);
         digitalWrite(IN2, HIGH);
+      }
 
       
       val2 = 200*sin( (100*(current_angle*pi)/180) + (3*pi/4));
@@ -133,7 +134,7 @@ void update_angle()
         digitalWrite(IN4, HIGH);
       }
       
-      delay(20);
+      delay(1);
       Serial.print(current_angle);
       Serial.print(" , ");
       Serial.print(val1,DEC);
@@ -147,4 +148,4 @@ void update_angle()
   }
 
 }
-}
+
