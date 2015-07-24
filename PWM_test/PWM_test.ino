@@ -34,7 +34,7 @@ void setup() {
   pinMode(IN4, OUTPUT);
   analogWrite(ledPin1, 217);  
   analogWrite(ledPin2, 217);  
-  analogWrite(halfpin, half);
+
   digitalWrite(IN1, HIGH);
   digitalWrite(IN2, LOW);
   digitalWrite(IN3, HIGH);
@@ -71,31 +71,31 @@ void update_angle()
     while (diff_angle >= 0.05)  {
       current_angle +=0.1;
       
-      val1 = 255*sin( (100*(current_angle*pi)/180) + (pi/4));
+      val1 = 200*sin( (100*(current_angle*pi)/180) + (pi/4));
       analogWrite(ledPin1, abs(val1));
       
       if (val1 >= 0)  {
-        digitalWrite(IN1, HIGH)
-        digitalWrite(IN2,LOW)
+        digitalWrite(IN1, HIGH);
+        digitalWrite(IN2,LOW);
       }
       else  {
-        digitalWrite(IN1, LOW)
-        digitalWrite(IN2, HIGH)
+        digitalWrite(IN1, LOW);
+        digitalWrite(IN2, HIGH);
       }
-      val2 = 255*sin( (100*(current_angle*pi)/180) + (3*pi/4));
+      val2 = 200*sin( (100*(current_angle*pi)/180) + (3*pi/4));
       analogWrite(ledPin2, abs(val2));  
       
       if (val2 >= 0)  {
-        digitalWrite(IN3, HIGH)
-        digitalWrite(IN4,LOW)
+        digitalWrite(IN3, HIGH);
+        digitalWrite(IN4,LOW);
       }
       else  {
-        digitalWrite(IN3, LOW)
-        digitalWrite(IN4, HIGH)
+        digitalWrite(IN3, LOW);
+        digitalWrite(IN4, HIGH);
       }
       
       
-      delay(10);
+      delay(20);
       Serial.print(current_angle);
       Serial.print(" , ");
       Serial.print(val1,DEC);
@@ -109,31 +109,31 @@ void update_angle()
         while (diff_angle <= -0.05)  {
       current_angle -=0.1;
       
-      val1 = 255*sin( (100*(current_angle*pi)/180) + (pi/4));
+      val1 = 200*sin( (100*(current_angle*pi)/180) + (pi/4));
       analogWrite(ledPin1, abs(val1));
       
       if (val1 >= 0)  {
-        digitalWrite(IN1, HIGH)
-        digitalWrite(IN2,LOW)
+        digitalWrite(IN1, HIGH);
+        digitalWrite(IN2,LOW);
       }
       else  {
-        digitalWrite(IN1, LOW)
-        digitalWrite(IN2, HIGH)
+        digitalWrite(IN1, LOW);
+        digitalWrite(IN2, HIGH);
 
       
-      val2 = 255*sin( (100*(current_angle*pi)/180) + (3*pi/4));
+      val2 = 200*sin( (100*(current_angle*pi)/180) + (3*pi/4));
       analogWrite(ledPin2, abs(val2));  
       
       if (val2 >= 0)  {
-        digitalWrite(IN3, HIGH)
-        digitalWrite(IN4,LOW)
+        digitalWrite(IN3, HIGH);
+        digitalWrite(IN4,LOW);
       }
       else  {
-        digitalWrite(IN3, LOW)
-        digitalWrite(IN4, HIGH)
+        digitalWrite(IN3, LOW);
+        digitalWrite(IN4, HIGH);
       }
       
-      delay(10);
+      delay(20);
       Serial.print(current_angle);
       Serial.print(" , ");
       Serial.print(val1,DEC);
@@ -146,4 +146,5 @@ void update_angle()
     
   }
 
+}
 }
