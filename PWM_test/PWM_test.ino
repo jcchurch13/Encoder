@@ -1,5 +1,7 @@
-/* PWM Test for Stepper Driver
-*/
+/* 
+This code tests out the A4954 driver
+for use in driving bipolar stepper motors
+/*
 
 
 #include <math.h>
@@ -20,6 +22,7 @@ int ledPin1 = 5;
 int ledPin2 = 6;
 int IN3 = 7;
 int IN4 = 8;
+int pulse = 12;
 
 
 
@@ -32,6 +35,7 @@ void setup() {
   pinMode(IN2, OUTPUT);
   pinMode(IN3, OUTPUT);
   pinMode(IN4, OUTPUT);
+  pinMode(pulse, OUTPUT);
   analogWrite(ledPin1, 217);  
   analogWrite(ledPin2, 217);  
 
@@ -71,6 +75,8 @@ void update_angle()
     while (diff_angle >= 0.05)  {
       current_angle +=0.1;
       
+       digitalWrite(pulse, !digitalRead(pulse));
+      
       val1 = 200*sin( (100*(current_angle*pi)/180) + (pi/4));
       analogWrite(ledPin1, abs(val1));
       
@@ -95,7 +101,7 @@ void update_angle()
       }
       
       
-      delay(1);
+      //delay(1);
       Serial.print(current_angle);
       Serial.print(" , ");
       Serial.print(val1,DEC);
@@ -108,6 +114,8 @@ void update_angle()
   else if (diff_angle <= -0.05) {
         while (diff_angle <= -0.05)  {
       current_angle -=0.1;
+       
+       digitalWrite(pulse, !digitalRead(pulse));
       
       val1 = 200*sin( (100*(current_angle*pi)/180) + (pi/4));
       analogWrite(ledPin1, abs(val1));
@@ -134,7 +142,7 @@ void update_angle()
         digitalWrite(IN4, HIGH);
       }
       
-      delay(1);
+      //delay(1);
       Serial.print(current_angle);
       Serial.print(" , ");
       Serial.print(val1,DEC);
