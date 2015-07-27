@@ -1,7 +1,7 @@
 /* 
 This code tests out the A4954 driver
 for use in driving bipolar stepper motors
-/*
+*/
 
 
 #include <math.h>
