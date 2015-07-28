@@ -9,10 +9,10 @@ Controlled via a serial terminal at 115200 baud.
 ____
     |
   13|-> LED 
-  12|-> pulse
-  11|
-  10|
-   9|                 _
+  12|-> pulse         _
+  11|-> clock          \
+  10|->Chip Select      |---AS5145
+   9|->data           _/
    8|->IN4             \
    7|->IN3              \
   ~6|->VREF2             \___A4954
@@ -50,16 +50,16 @@ r  - returns EEPROM contents
 
 
 #include <EEPROM.h>
+#include <math.h>
+
 
 
 
 const int ledPin = 13; //LED connected to digital pin 13
-const int clockPin = 7; //output to clock
-const int CSnPin = 6; //output to chip select
-const int inputPin = 2; //read AS5040
+const int clockPin = 11; //output to clock
+const int CSnPin = 10; //output to chip select
+const int inputPin = 9; //read AS5040
 
-const int stepPin = 4;
-const int dirPin = 5;
 
 
 int inputstream = 0; //one bit read from pin
@@ -89,19 +89,69 @@ int i_step = 0; // step index
 int i_w = 0;// write index
 int i_r = 0; // read index
 
-void setup()
-{
+//___________________________________
+
+const float pi = 3.14159;
+const int  half = 134;//128;
+
+float new_angle = 0.0; //input angle
+float current_angle = 0.0; //current angle
+float diff_angle = 0.0;
+int val1 = 0;
+int val2 = 0;
+
+
+int IN1 = 3;
+int IN2 = 4;
+int VREF1 = 5;
+int VREF2 = 6;
+int IN3 = 7;
+int IN4 = 8;
+int pulse = 12;
+
+
+
+void setup() {
   Serial.begin(115200);
+  
+  pinMode(VREF1, OUTPUT);
+  pinMode(VREF2, OUTPUT);
+  pinMode(IN1, OUTPUT);
+  pinMode(IN2, OUTPUT);
+  pinMode(IN3, OUTPUT);
+  pinMode(IN4, OUTPUT);
+  pinMode(pulse, OUTPUT);
+  
+  
+  analogWrite(VREF1, 217);  
+  analogWrite(VREF2, 217);  
+
+  digitalWrite(IN1, HIGH);
+  digitalWrite(IN2, LOW);
+  digitalWrite(IN3, HIGH);
+  digitalWrite(IN4, LOW);
+ 
   pinMode(ledPin, OUTPUT); // visual signal of I/O to chip
   pinMode(clockPin, OUTPUT); // SCK
   pinMode(CSnPin, OUTPUT); // CSn -- has to toggle high and low to signal chip to start data transfer
   pinMode(inputPin, INPUT); // SDA
-  
-  pinMode(stepPin, OUTPUT);
-  pinMode(dirPin, OUTPUT);
+
+
 }
 
 
+
+
+void loop() {
+  Serial.println("Enter angle:");      //Prompt User for input
+  
+  while (Serial.available()==0)  {     //Wait for new angle
+  }  
+  
+  
+  update_angle();
+
+}
 
 void loop()
 {
@@ -247,6 +297,105 @@ void loop()
 }
 
 }
+
+
+
+
+void update_angle()
+{
+  new_angle=Serial.parseFloat();     
+  diff_angle =(new_angle-current_angle);
+  
+  
+  
+  if (diff_angle > 0.05)  {
+    while (diff_angle >= 0.05)  {
+      current_angle +=0.1;
+      
+       digitalWrite(pulse, !digitalRead(pulse));
+      
+      val1 = 200*sin( (100*(current_angle*pi)/180) + (pi/4));
+      analogWrite(VREF1, abs(val1));
+      
+      if (val1 >= 0)  {
+        digitalWrite(IN1, HIGH);
+        digitalWrite(IN2,LOW);
+      }
+      else  {
+        digitalWrite(IN1, LOW);
+        digitalWrite(IN2, HIGH);
+      }
+      val2 = 200*sin( (100*(current_angle*pi)/180) + (3*pi/4));
+      analogWrite(VREF2, abs(val2));  
+      
+      if (val2 >= 0)  {
+        digitalWrite(IN3, HIGH);
+        digitalWrite(IN4,LOW);
+      }
+      else  {
+        digitalWrite(IN3, LOW);
+        digitalWrite(IN4, HIGH);
+      }
+      
+      
+      //delay(1);
+      Serial.print(current_angle);
+      Serial.print(" , ");
+      Serial.print(val1,DEC);
+      Serial.print(" , ");
+      Serial.println(val2,DEC);
+      diff_angle =(new_angle-current_angle);  
+    }
+
+  }
+  else if (diff_angle <= -0.05) {
+        while (diff_angle <= -0.05)  {
+      current_angle -=0.1;
+       
+       digitalWrite(pulse, !digitalRead(pulse));
+      
+      val1 = 200*sin( (100*(current_angle*pi)/180) + (pi/4));
+      analogWrite(VREF1, abs(val1));
+      
+      if (val1 >= 0)  {
+        digitalWrite(IN1, HIGH);
+        digitalWrite(IN2,LOW);
+      }
+      else  {
+        digitalWrite(IN1, LOW);
+        digitalWrite(IN2, HIGH);
+      }
+
+      
+      val2 = 200*sin( (100*(current_angle*pi)/180) + (3*pi/4));
+      analogWrite(VREF2, abs(val2));  
+      
+      if (val2 >= 0)  {
+        digitalWrite(IN3, HIGH);
+        digitalWrite(IN4,LOW);
+      }
+      else  {
+        digitalWrite(IN3, LOW);
+        digitalWrite(IN4, HIGH);
+      }
+      
+      //delay(1);
+      Serial.print(current_angle);
+      Serial.print(" , ");
+      Serial.print(val1,DEC);
+      Serial.print(" , ");
+      Serial.println(val2,DEC);
+      diff_angle =(new_angle-current_angle);  
+    }
+
+    
+    
+  }
+
+}
+
+
+
 
 
 
