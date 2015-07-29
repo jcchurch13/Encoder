@@ -61,8 +61,9 @@ const int clockPin = 11; //output to clock
 const int CSnPin = 10; //output to chip select
 const int inputPin = 9; //read AS5040
 
-const int dir = 1;
-const int step_state = 1;
+
+int dir = 1;
+int step_state = 1;
 
 
 
@@ -157,6 +158,7 @@ void loop()
     
     if (inChar == 'p') {
       print_angle();
+      delay(50);
     }
     
     else if (inChar == 's') {
@@ -185,7 +187,8 @@ void loop()
         one_step();
         a = readEncoder();
         anglefloat = a * 0.08789;
-        Serial.println(anglefloat,DEC);                
+        Serial.println(anglefloat,DEC);
+      delay(50);        
       }
       delay(100);
       offset = readEncoder();
@@ -353,50 +356,52 @@ void update_angle()
 
 void one_step(){
 
-if (dir == 1) {
+  if (dir == 1) {
         i_step += 1;
         step_state += 1;
         if (step_state == 5){
-          step_state = 1
+          step_state = 1;
         }
-}
-else {
+  }
+   else{
         i_step -= 1;
         step_state -= 1;
         if (step_state == 0){
-          step_state = 4
+          step_state = 4;
         }
-}
-      
+  }
+  Serial.println(dir,DEC);
+  Serial.println(step_state,DEC);
+  
       
   analogWrite(VREF1, 217);  
   analogWrite(VREF2, 217);  
-    switch (step_state) {
-    case 1:
+    if (step_state == 1){
         digitalWrite(IN1, HIGH);
         digitalWrite(IN2, LOW);
         digitalWrite(IN3, HIGH);
         digitalWrite(IN4, LOW);
-      break;
-    case 2:
-        digitalWrite(IN1, HIGH);
-        digitalWrite(IN2, LOW);
-        digitalWrite(IN3, LOW);
-        digitalWrite(IN4, HIGH);
-      break;
-    case 3:
-        digitalWrite(IN1, LOW);
-        digitalWrite(IN2, HIGH);
-        digitalWrite(IN3, LOW);
-        digitalWrite(IN4, HIGH);
-      break;
-     case 4:
+    }
+    else if (step_state == 2){
+
         digitalWrite(IN1, LOW);
         digitalWrite(IN2, HIGH);
         digitalWrite(IN3, HIGH);
         digitalWrite(IN4, LOW);
-      break;
-  }
+    }
+    else if (step_state == 3){
+        digitalWrite(IN1, LOW);
+        digitalWrite(IN2, HIGH);
+        digitalWrite(IN3, LOW);
+        digitalWrite(IN4, HIGH);
+    }
+     else if (step_state == 4){
+        digitalWrite(IN1, HIGH);
+        digitalWrite(IN2, LOW);
+        digitalWrite(IN3, LOW);
+        digitalWrite(IN4, HIGH);
+        
+     }
       delay(10);
 }
 
