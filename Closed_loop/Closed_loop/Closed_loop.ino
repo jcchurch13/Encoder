@@ -241,9 +241,9 @@ void loop()
    else if (inChar == 'a')  {
      Serial.println("Enter angle:");      //Prompt User for input
      while (Serial.available()==0)  {     //Wait for new angle
-  }   
-  update_angle();
-}    
+    }   
+     update_angle();
+    }    
        
      
      
