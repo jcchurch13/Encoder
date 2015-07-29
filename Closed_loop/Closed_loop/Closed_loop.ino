@@ -155,50 +155,24 @@ void loop()
 
     char inChar = (char)Serial.read();
     
-    
-    
     if (inChar == 'p') {
-      a = readEncoder();
-        anglefloat = a * 0.08789;
-        Serial.print(i_step,DEC);
-        Serial.print(" , ");
-        Serial.print(i_step*0.9,DEC);
-        Serial.print(" , ");
-        Serial.print(a,DEC);
-        Serial.print(" , ");
-        //Serial.println(a-offset, DEC);
-        Serial.println(anglefloat, DEC);
+      print_angle();
     }
     
-    
-    
     else if (inChar == 's') {
-      if (!digitalRead(dirPin)) {
-        i_step += 1;
-      }
-      else {
-        i_step -= 1;
-      }
-      digitalWrite(stepPin, HIGH);
-      delay(10);
-      digitalWrite(stepPin, LOW);
-      delay(10);
-        
-        a = readEncoder();
-        anglefloat = a * 0.08789;
-        Serial.print(i_step,DEC);
-        Serial.print(" , ");
-        Serial.print(i_step*0.9,DEC);
-        Serial.print(" , ");
-        Serial.print(a,DEC);
-        Serial.print(" , ");
-         //Serial.println(a-offset, DEC);
-        Serial.println(anglefloat, DEC);
+      one_step();  
+      print_angle();
     }
     
     else if (inChar == 'd') {
-       digitalWrite(dirPin, !digitalRead(dirPin));
+       if (dir == 1){
+         dir = 0;
+       }
+       else {
+         dir = 1;
+       }
     }
+    
     else if (inChar == 'c') {
        i_step = 0;
        i_w = 0;
@@ -208,16 +182,7 @@ void loop()
       a = readEncoder();
       anglefloat = a * 0.08789;
       while (anglefloat >= 0.9) {
-          if (!digitalRead(dirPin)) {
-          i_step += 1;
-        }
-        else {
-          i_step -= 1;
-        }
-        digitalWrite(stepPin, HIGH);
-        delay(10);
-        digitalWrite(stepPin, LOW);
-        delay(10);
+        one_step();
         a = readEncoder();
         anglefloat = a * 0.08789;
         Serial.println(anglefloat,DEC);                
@@ -227,16 +192,7 @@ void loop()
      }
      else if (inChar == 'g') {
        for(int x = 0; x < 400; x++){
-        if (!digitalRead(dirPin)) {
-          i_step += 1;
-        }
-        else {
-          i_step -= 1;
-        }
-        digitalWrite(stepPin, HIGH);
-        delay(10);
-        digitalWrite(stepPin, LOW);
-        delay(50);
+        one_step();
         a = readEncoder();
         anglefloat = a * 0.08789;
         //Serial.print(i_step,DEC);
@@ -250,16 +206,7 @@ void loop()
      
      else if (inChar == 'w') {
        for(int x = 0; x < 400; x++){
-        if (!digitalRead(dirPin)) {
-          i_step += 1;
-        }
-        else {
-          i_step -= 1;
-        }
-        digitalWrite(stepPin, HIGH);
-        delay(10);
-        digitalWrite(stepPin, LOW);
-        delay(50);
+        one_step();
         a = readEncoder();
         i_w = 2*x;
         EEPROM.put(i_w,a);
@@ -404,7 +351,7 @@ void update_angle()
 
 
 
-void step(){
+void one_step(){
 
 if (dir == 1) {
         i_step += 1;
@@ -412,13 +359,14 @@ if (dir == 1) {
         if (step_state == 5){
           step_state = 1
         }
-      }
-      else {
+}
+else {
         i_step -= 1;
         step_state -= 1;
         if (step_state == 0){
           step_state = 4
-      }
+        }
+}
       
       
   analogWrite(VREF1, 217);  
@@ -450,6 +398,21 @@ if (dir == 1) {
       break;
   }
       delay(10);
+}
+
+
+void print_angle()
+{
+        a = readEncoder();
+        anglefloat = a * 0.08789;
+        Serial.print(i_step,DEC);
+        Serial.print(" , ");
+        Serial.print(i_step*0.9,DEC);
+        Serial.print(" , ");
+        Serial.print(a,DEC);
+        Serial.print(" , ");
+        //Serial.println(a-offset, DEC);
+        Serial.println(anglefloat, DEC);
 }
 
 int readEncoder()
