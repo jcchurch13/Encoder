@@ -41,8 +41,9 @@ g  -  Go! steps around 400 times
 
 w  -  Same as go, but stores encoder angles to EEPROM
 
-r  - returns EEPROM contents
+r  -  returns EEPROM contents
 
+a  -  prompts user to enter angle 
 
 
 
@@ -59,6 +60,9 @@ const int ledPin = 13; //LED connected to digital pin 13
 const int clockPin = 11; //output to clock
 const int CSnPin = 10; //output to chip select
 const int inputPin = 9; //read AS5040
+
+const int dir = 1;
+const int step_state = 1;
 
 
 
@@ -142,16 +146,8 @@ void setup() {
 
 
 
-void loop() {
-  Serial.println("Enter angle:");      //Prompt User for input
-  
-  while (Serial.available()==0)  {     //Wait for new angle
-  }  
-  
-  
-  update_angle();
 
-}
+
 
 void loop()
 {
@@ -173,6 +169,7 @@ void loop()
         //Serial.println(a-offset, DEC);
         Serial.println(anglefloat, DEC);
     }
+    
     
     
     else if (inChar == 's') {
@@ -290,7 +287,13 @@ void loop()
         //Serial.println(a-offset, DEC);
         Serial.println(anglefloat, DEC);
        }
-     }    
+     }
+   else if (inChar == 'a')  {
+     Serial.println("Enter angle:");      //Prompt User for input
+     while (Serial.available()==0)  {     //Wait for new angle
+  }   
+  update_angle();
+}    
        
      
      
@@ -403,15 +406,49 @@ void update_angle()
 
 void step(){
 
-if (!digitalRead(dirPin)) {
+if (dir == 1) {
         i_step += 1;
+        step_state += 1;
+        if (step_state == 5){
+          step_state = 1
+        }
       }
       else {
         i_step -= 1;
+        step_state -= 1;
+        if (step_state == 0){
+          step_state = 4
       }
-      digitalWrite(stepPin, HIGH);
-      delay(10);
-      digitalWrite(stepPin, LOW);
+      
+      
+  analogWrite(VREF1, 217);  
+  analogWrite(VREF2, 217);  
+    switch (step_state) {
+    case 1:
+        digitalWrite(IN1, HIGH);
+        digitalWrite(IN2, LOW);
+        digitalWrite(IN3, HIGH);
+        digitalWrite(IN4, LOW);
+      break;
+    case 2:
+        digitalWrite(IN1, HIGH);
+        digitalWrite(IN2, LOW);
+        digitalWrite(IN3, LOW);
+        digitalWrite(IN4, HIGH);
+      break;
+    case 3:
+        digitalWrite(IN1, LOW);
+        digitalWrite(IN2, HIGH);
+        digitalWrite(IN3, LOW);
+        digitalWrite(IN4, HIGH);
+      break;
+     case 4:
+        digitalWrite(IN1, LOW);
+        digitalWrite(IN2, HIGH);
+        digitalWrite(IN3, HIGH);
+        digitalWrite(IN4, LOW);
+      break;
+  }
       delay(10);
 }
 
