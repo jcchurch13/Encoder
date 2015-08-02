@@ -52,7 +52,6 @@ a  -  prompts user to enter angle
 
 #include <EEPROM.h>
 #include <math.h>
-#include <avr/pgmspace.h>
 
 
 
@@ -62,10 +61,6 @@ const int clockPin = 11; //output to clock
 const int CSnPin = 10; //output to chip select
 const int inputPin = 9; //read AS5040
 
-//const PROGMEM  long  lookup[] = {};
-float  lookup[] = {};
-
-long l_index = 0; 
 
 int dir = 1;
 int step_state = 1;
@@ -79,11 +74,6 @@ long angletemp;
 float anglefloat = 0; 
 
 int a = 0;  //angle value in zero routine
-int b = 0;
-float c = 0.0;
-float l = 0.0;
-float m = 0.0;
-
 float offset = 0.000000000000000; //zero-offest of closest full step
 
 //long anglemask = 65472; //0x1111111111000000: mask to obtain first 10 digits with position info
@@ -232,34 +222,6 @@ void loop()
         //Serial.println(a-offset, DEC);
         Serial.println(anglefloat, DEC);
        }
-       
-        for(long x = 0; x < 10; x++){
-        i_r = 2*x;
-        EEPROM.get(i_r,a);
-        EEPROM.get(i_r+2,b);
-        
-        l = 1.0*a;
-        m = 1.0*b;
-        c = 1.0*(m-l);
-        for(float y = 0.0; y < c; y = y+1.0){
-//          Serial.println("------------------");
-//          Serial.println(l,DEC);
-//          Serial.println(m,DEC);
-//          Serial.println(x,DEC);
-//          Serial.println(y,DEC);
-//          Serial.println(l+y,DEC);
-//          Serial.println((y/c),DEC);
-//          Serial.println((l+(y/c)),DEC);
-          
-          lookup[(int)(l+y)]= l + (y/c);
-        }
-         
-         
-       }
-       Serial.println("lookup:");
-       for(int z = 0; z < 100; z++){
-      Serial.println(lookup[z]);
-       }
      }    
       else if (inChar == 'r') {
        for(int x = 0; x < 400; x++){
@@ -273,8 +235,7 @@ void loop()
         //Serial.print(i_step*0.9,DEC);
         //Serial.print(" , ");
         //Serial.println(a-offset, DEC);
-        Serial.println(a, DEC);
-        //Serial.println(anglefloat, DEC);
+        Serial.println(anglefloat, DEC);
        }
      }
    else if (inChar == 'a')  {
@@ -289,12 +250,6 @@ void loop()
 }
 
 }
-
-
-
-float angle_to_encoder_reading(float);
-
-float encoder_reading_to_angle(float);
 
 
 
