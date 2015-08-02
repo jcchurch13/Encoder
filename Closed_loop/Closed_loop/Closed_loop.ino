@@ -63,7 +63,7 @@ const int CSnPin = 10; //output to chip select
 const int inputPin = 9; //read AS5040
 
 //const PROGMEM  long  lookup[] = {};
-float  lookup[] = {};
+float lookup[] = {};
 
 long l_index = 0; 
 
@@ -240,8 +240,21 @@ void loop()
         
         l = 1.0*a;
         m = 1.0*b;
-        c = 1.0*(m-l);
-        for(float y = 0.0; y < c; y = y+1.0){
+        //c = 1.0*(m-l);
+        c = m-l;
+                for(float y = 0.0; y < c; y = y+1.0){
+          Serial.println("------------------");
+         Serial.println(a+y,DEC);
+          Serial.println(l,DEC);
+          Serial.println(m,DEC);
+          Serial.println(x,DEC);
+          Serial.println(y,DEC);
+          Serial.println(l+y,DEC);
+          Serial.println((y/c),DEC);
+          Serial.println((l+(y/c)),DEC);
+          
+          lookup[(int) (1.0*(a+y))]= (a+(y/c));
+//        for(float y = 0.0; y < c; y = y+1.0){
 //          Serial.println("------------------");
 //          Serial.println(l,DEC);
 //          Serial.println(m,DEC);
@@ -250,15 +263,15 @@ void loop()
 //          Serial.println(l+y,DEC);
 //          Serial.println((y/c),DEC);
 //          Serial.println((l+(y/c)),DEC);
-          
-          lookup[(int)(l+y)]= l + (y/c);
+//          
+//          lookup[(int)(l+y)]= (l+(y/c));
         }
          
          
        }
        Serial.println("lookup:");
        for(int z = 0; z < 100; z++){
-      Serial.println(lookup[z]);
+      Serial.println(lookup[1*z]);
        }
      }    
       else if (inChar == 'r') {
