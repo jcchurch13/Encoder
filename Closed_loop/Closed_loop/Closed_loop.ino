@@ -116,6 +116,7 @@ int IN4 = 8;
 int pulse = 12;
 
 float angle_out=0.0;
+int zero_state =0;
 
 
 
@@ -4286,6 +4287,8 @@ void loop()
       }
       delay(100);
       offset = readEncoder();
+      zero_state = step_state;
+      Serial.println(zero_state,DEC);
      }
      else if (inChar == 'g') {
        for(int x = 0; x < 400; x++){
@@ -4534,45 +4537,42 @@ void update_angle()
 void one_step(){
 
   if (dir == 0) {
-        i_step += 1;
-        step_state += 1;
-        if (step_state == 5){
-          step_state = 1;
-        }
+        i_step += 1;     
   }
    else{
-        i_step -= 1;
-        step_state -= 1;
-        if (step_state == 0){
-          step_state = 4;
-        }
+        i_step -= 1;      
   }
+  step_state = ((((i_step+zero_state) % 4)+4)%4);   // arduino mod does not wrap for negative....
+
+  
+  
   Serial.println(dir,DEC);
   Serial.println(step_state,DEC);
+
   
       
-  analogWrite(VREF1, 217);  
-  analogWrite(VREF2, 217);  
-    if (step_state == 1){
+  analogWrite(VREF1, 144);  
+  analogWrite(VREF2, 144);  
+    if (step_state == 0){
         digitalWrite(IN1, HIGH);
         digitalWrite(IN2, LOW);
         digitalWrite(IN3, HIGH);
         digitalWrite(IN4, LOW);
     }
-    else if (step_state == 2){
+    else if (step_state == 1){
 
         digitalWrite(IN1, LOW);
         digitalWrite(IN2, HIGH);
         digitalWrite(IN3, HIGH);
         digitalWrite(IN4, LOW);
     }
-    else if (step_state == 3){
+    else if (step_state == 2){
         digitalWrite(IN1, LOW);
         digitalWrite(IN2, HIGH);
         digitalWrite(IN3, LOW);
         digitalWrite(IN4, HIGH);
     }
-     else if (step_state == 4){
+     else if (step_state == 3){
         digitalWrite(IN1, HIGH);
         digitalWrite(IN2, LOW);
         digitalWrite(IN3, LOW);
