@@ -55,13 +55,11 @@ a  -  prompts user to enter angle
 #include <avr/pgmspace.h>
 
 
-float kp = 50.0;
+
+float kp = 5.0;
 float ep = 00.0;
 
-const int ledPin = 13; //LED connected to digital pin 13
-const int clockPin = 11; //output to clock
-const int CSnPin = 10; //output to chip select
-const int inputPin = 9; //read AS5040
+
 
 
 int dir = 1;
@@ -107,14 +105,28 @@ float diff_angle = 0.0;
 int val1 = 0;
 int val2 = 0;
 
-
-int IN1 = 3;
-int IN2 = 4;
+//////////////////////////////////////
+//////////////////PINS////////////////
+//////////////////////////////////////
+int IN1 = 8;
+int IN2 = 9;
 int VREF1 = 5;
 int VREF2 = 6;
-int IN3 = 7;
-int IN4 = 8;
+int IN3 = 10;
+int IN4 = 11;
 int pulse = 12;
+
+
+const int ledPin = 13; //LED connected to digital pin 13
+const int clockPin = 2; //output to clock
+const int CSnPin = 3; //output to chip select
+const int inputPin = 7; //read AS5040
+
+
+//////////////////////////////////////
+//////////////////////////////////////
+//////////////////////////////////////
+
 
 float angle_out=0.0;
 int zero_state =0;
@@ -4238,6 +4250,11 @@ void setup() {
   pinMode(inputPin, INPUT); // SDA
 
 
+  Serial.print("DDRB , ");
+  Serial.println(DDRB,BIN);
+  Serial.print("DDRD , ");
+  Serial.println(DDRD,BIN);
+  
 }
 
 
@@ -4549,20 +4566,26 @@ void setpoint()
        new_angle=Serial.parseFloat();
     }
     
-    
+    int start = micros()
     a = readEncoder();
+    int finish = micros()
+    Serial.println(finish-start,DEC)
+    
        current_angle= lookup_angle(a);
   diff_angle =(new_angle-current_angle);
   
   ep=abs(kp*diff_angle);
-  if (ep>200){
-    ep = 200;
+  if (ep>256){
+    ep = 256;
   }
-  Serial.println(current_angle);
-  digitalWrite(pulse, !digitalRead(pulse));
+ // Serial.println(current_angle);
+  
+  //digitalWrite(pulse, !digitalRead(pulse));
+  PORTB ^= (B00010000); 
+ 
  // Serial.println(ep,DEC);
-  if (diff_angle > 0.15)  {
-    while (diff_angle >= 0.15)  {
+  if (diff_angle > 0.05)  {
+    while (diff_angle >= 0.05)  {
       current_angle +=0.1;
       
        //digitalWrite(pulse, !digitalRead(pulse));
@@ -4571,23 +4594,33 @@ void setpoint()
       analogWrite(VREF1, abs(val1));
       
       if (val1 >= 0)  {
-        digitalWrite(IN1, HIGH);
-        digitalWrite(IN2,LOW);
+        //digitalWrite(IN1, HIGH);
+        PORTB |= (B00000001);
+        //digitalWrite(IN2,LOW);
+        PORTB &= ~(B00000010);
       }
       else  {
-        digitalWrite(IN1, LOW);
-        digitalWrite(IN2, HIGH);
+        //digitalWrite(IN1, LOW);
+        PORTB &= ~(B00000001);
+        //digitalWrite(IN2, HIGH);
+        PORTB |= (B00000010);
       }
       val2 = ep*sin( (100*(current_angle*pi)/180) + .45+((pi/4)*(1+ 2*zero_state)));
       analogWrite(VREF2, abs(val2));  
       
       if (val2 >= 0)  {
-        digitalWrite(IN3, HIGH);
-        digitalWrite(IN4,LOW);
+        //digitalWrite(IN3, HIGH);
+        PORTB |= (B00000100);
+        //digitalWrite(IN4,LOW);
+        PORTB &= ~(B00001000);
+        
       }
       else  {
-        digitalWrite(IN3, LOW);
-        digitalWrite(IN4, HIGH);
+        //digitalWrite(IN3, LOW);
+        PORTB &= ~(B00000100);
+        //digitalWrite(IN4, HIGH);
+        PORTB |= (B00001000);
+        
       }
       
       
@@ -4601,8 +4634,8 @@ void setpoint()
     }
 
   }
-  else if (diff_angle <= -0.15) {
-        while (diff_angle <= -0.15)  {
+  else if (diff_angle <= -0.05) {
+        while (diff_angle <= -0.05)  {
       current_angle -=0.1;
        
       // digitalWrite(pulse, !digitalRead(pulse));
@@ -4611,12 +4644,16 @@ void setpoint()
       analogWrite(VREF1, abs(val1));
       
       if (val1 >= 0)  {
-        digitalWrite(IN1, HIGH);
-        digitalWrite(IN2,LOW);
+        //digitalWrite(IN1, HIGH);
+        PORTB |= (B00000001);
+        //digitalWrite(IN2,LOW);
+        PORTB &= ~(B00000010);
       }
       else  {
-        digitalWrite(IN1, LOW);
-        digitalWrite(IN2, HIGH);
+        //digitalWrite(IN1, LOW);
+        PORTB &= ~(B00000001);
+        //digitalWrite(IN2, HIGH);
+        PORTB |= (B00000010);
       }
 
       
@@ -4624,12 +4661,18 @@ void setpoint()
       analogWrite(VREF2, abs(val2));  
       
       if (val2 >= 0)  {
-        digitalWrite(IN3, HIGH);
-        digitalWrite(IN4,LOW);
+        //digitalWrite(IN3, HIGH);
+        PORTB |= (B00000100);
+        //digitalWrite(IN4,LOW);
+        PORTB &= ~(B00001000);
+        
       }
       else  {
-        digitalWrite(IN3, LOW);
-        digitalWrite(IN4, HIGH);
+        //digitalWrite(IN3, LOW);
+        PORTB &= ~(B00000100);
+        //digitalWrite(IN4, HIGH);
+        PORTB |= (B00001000);
+        
       }
       
       //delay(1);
