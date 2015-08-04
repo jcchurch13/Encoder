@@ -4566,10 +4566,10 @@ void setpoint()
        new_angle=Serial.parseFloat();
     }
     
-    int start = micros()
+    int start = micros();
     a = readEncoder();
-    int finish = micros()
-    Serial.println(finish-start,DEC)
+    int finish = micros();
+    
     
        current_angle= lookup_angle(a);
   diff_angle =(new_angle-current_angle);
@@ -4581,14 +4581,16 @@ void setpoint()
  // Serial.println(current_angle);
   
   //digitalWrite(pulse, !digitalRead(pulse));
-  PORTB ^= (B00010000); 
+  
  
  // Serial.println(ep,DEC);
   if (diff_angle > 0.05)  {
-    while (diff_angle >= 0.05)  {
+    //while (diff_angle >= 0.05)  
       current_angle +=0.1;
       
        //digitalWrite(pulse, !digitalRead(pulse));
+      PORTB ^= (B00010000); 
+      
       
       val1 = ep*sin( (100*(current_angle*pi)/180) + .45+((pi/4)*(3+ 2*zero_state)));
       analogWrite(VREF1, abs(val1));
@@ -4630,16 +4632,18 @@ void setpoint()
     //  Serial.print(val1,DEC);
     //  Serial.print(" , ");
     //  Serial.println(val2,DEC);
-      diff_angle =(new_angle-current_angle);  
-    }
+      //diff_angle =(new_angle-current_angle);  
+    
 
   }
   else if (diff_angle <= -0.05) {
-        while (diff_angle <= -0.05)  {
+        //while (diff_angle <= -0.05)  
       current_angle -=0.1;
        
       // digitalWrite(pulse, !digitalRead(pulse));
       
+      PORTB ^= (B00010000); 
+      
       val1 = ep*sin( (100*(current_angle*pi)/180) + .45+((pi/4)*(3+ 2*zero_state)));
       analogWrite(VREF1, abs(val1));
       
@@ -4681,17 +4685,18 @@ void setpoint()
     //  Serial.print(val1,DEC);
     //  Serial.print(" , ");
     //  Serial.println(val2,DEC);
-      diff_angle =(new_angle-current_angle);  
-    }
+      //diff_angle =(new_angle-current_angle);  
+    
 
     
-    
+         
   }
   else{
   analogWrite(VREF1, 0); 
   analogWrite(VREF2, 0);  
   
   }
+  //Serial.println(finish-start,DEC);
 
 }
 
