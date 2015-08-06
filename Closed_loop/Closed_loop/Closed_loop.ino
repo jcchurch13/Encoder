@@ -56,9 +56,9 @@ a  -  prompts user to enter angle
 
 
 
-float kp = 20.0;
+float kp = 1.0;
 int ep = 0;
-float ki = 3.0;
+float ki = 1.0;
 float KF = 1.0;
 
 
@@ -86,8 +86,8 @@ int OCF; //bit holding startup-valid bit
 int COF; //bit holding cordic DSP processing error data
 int LIN; //bit holding magnet field displacement error data
 int debug = 1; //SET THIS TO 0 TO DISABLE PRINTING OF ERROR CODES
-int shortdelay = 100; // this is the microseconds of delay in the data clock
-int longdelay = 10; // this is the milliseconds between readings
+int shortdelay = 10; // this is the microseconds of delay in the data clock
+int longdelay = 1; // this is the milliseconds between readings
 
 
 int i_step = 0; // step index
@@ -4562,25 +4562,26 @@ void setpoint()
 {
   static float ei =0.0;    
   static int U = 0;
-  
-  
-  
+  int start =0;
+  int finish = 0;
+
   
   static float FA = 0.0;
   while(1){
+    
     if (Serial.available() > 0) {
        new_angle=Serial.parseFloat();
     }
     
-    //int start = micros();
+   start = micros();
     a = readEncoder();
-    //int finish = micros();
+finish = micros();
     
     
        current_angle= lookup_angle(a);
        ei = 0.95*(ei+diff_angle);
   diff_angle = -(new_angle-current_angle);
- Serial.print(current_angle,DEC);
+ /*Serial.print(current_angle,DEC);
   Serial.print("  |  ") ;
   Serial.print(ei,DEC);
   Serial.print("  |  ") ;
@@ -4588,17 +4589,20 @@ void setpoint()
   Serial.print("  |  ") ;  
   Serial.println(diff_angle,DEC);
   //delay(100);
- 
+*/ 
   ep=(kp*diff_angle);
   U =abs(ep+ki*ei);
-  if (U>256){
-    U = 256;
+  if (U>100){
+    U = 100;
+  }
+  else if (U<25){
+    U = 25;
   }
   
-  FA = abs(diff_angle*KF);
-  if (FA>=0.3){
-   FA=0.3; 
-  }
+  //FA = abs(diff_angle*KF);
+  //if (FA>=0.1){
+   FA=0.05; 
+  //}
  // Serial.println(current_angle);
   
   //digitalWrite(pulse, !digitalRead(pulse));
@@ -4612,11 +4616,13 @@ void setpoint()
        //digitalWrite(pulse, !digitalRead(pulse));
       PORTB ^= (B00010000); 
       
-      
+      ;
       val1 = U*sin( (100*(current_angle*pi)/180) + 4.5+((pi/4)*(3+ 2*zero_state)));
       //val1 = ep*sin( 1.74533*current_angle + 6.8562);
-      analogWrite(VREF1, abs(val1));
       
+     
+      analogWrite(VREF1, abs(val1));
+
       if (val1 >= 0)  {
         //digitalWrite(IN1, HIGH);
         PORTB |= (B00000001);
@@ -4719,7 +4725,7 @@ void setpoint()
   analogWrite(VREF2, 0);  
   
   }
-  //Serial.println(finish-start,DEC);
+ // Serial.println(finish-start,DEC);
 
 }
 
@@ -4799,7 +4805,8 @@ int readEncoder()
 // again, data will appear on sda
   digitalWrite(CSnPin, HIGH); // CSn high
   digitalWrite(clockPin, HIGH); // CLK high
-  delay(longdelay);// time between readings
+  //delay(longdelay);// time between readings
+  delayMicroseconds(1000);
   digitalWrite(ledPin, HIGH); // signal start of transfer with LED
   digitalWrite(CSnPin, LOW); // CSn low: start of transfer
   delayMicroseconds(shortdelay); // delay for chip initialization
