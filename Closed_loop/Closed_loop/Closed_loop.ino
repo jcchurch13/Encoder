@@ -57,9 +57,9 @@ a  -  prompts user to enter angle
 
 
 float kp = 20.0;
-float ep = 00.0;
-
-
+int ep = 0;
+float ki = 3.0;
+float KF = 1.0;
 
 
 int dir = 1;
@@ -4560,7 +4560,13 @@ void update_angle()
 
 void setpoint()
 {
-      
+  static float ei =0.0;    
+  static int U = 0;
+  
+  
+  
+  
+  static float FA = 0.0;
   while(1){
     if (Serial.available() > 0) {
        new_angle=Serial.parseFloat();
@@ -4572,19 +4578,26 @@ void setpoint()
     
     
        current_angle= lookup_angle(a);
-  diff_angle =-(new_angle-current_angle);
- /* Serial.print(current_angle,DEC);
+       ei = 0.95*(ei+diff_angle);
+  diff_angle = -(new_angle-current_angle);
+ Serial.print(current_angle,DEC);
   Serial.print("  |  ") ;
-  Serial.print(val1,DEC);
+  Serial.print(ei,DEC);
   Serial.print("  |  ") ;
-  Serial.print(val2,DEC);
+  Serial.print(FA,DEC);
   Serial.print("  |  ") ;  
   Serial.println(diff_angle,DEC);
   //delay(100);
-  */
-  ep=abs(kp*diff_angle);
-  if (ep>256){
-    ep = 256;
+ 
+  ep=(kp*diff_angle);
+  U =abs(ep+ki*ei);
+  if (U>256){
+    U = 256;
+  }
+  
+  FA = abs(diff_angle*KF);
+  if (FA>=0.3){
+   FA=0.3; 
   }
  // Serial.println(current_angle);
   
@@ -4592,16 +4605,16 @@ void setpoint()
   
  
  // Serial.println(ep,DEC);
-  if (diff_angle > 0.0)  {
+  if (diff_angle > 0.05)  {
     //while (diff_angle >= 0.05)  
-      current_angle -= 0.2;
+      current_angle -= FA;//0.15;
       
        //digitalWrite(pulse, !digitalRead(pulse));
       PORTB ^= (B00010000); 
       
       
-      //val1 = ep*sin( (100*(current_angle*pi)/180) + 4.5+((pi/4)*(3+ 2*zero_state)));
-      val1 = ep*sin( 1.745*current_angle + 6.86);
+      val1 = U*sin( (100*(current_angle*pi)/180) + 4.5+((pi/4)*(3+ 2*zero_state)));
+      //val1 = ep*sin( 1.74533*current_angle + 6.8562);
       analogWrite(VREF1, abs(val1));
       
       if (val1 >= 0)  {
@@ -4616,8 +4629,8 @@ void setpoint()
         //digitalWrite(IN2, HIGH);
         PORTB |= (B00000010);
       }
-      //val2 = ep*sin( (100*(current_angle*pi)/180) + 4.5+((pi/4)*(1+ 2*zero_state)));
-      val2 = ep*sin( 1.745*current_angle + 5.29);
+      val2 = U*sin( (100*(current_angle*pi)/180) + 4.5+((pi/4)*(1+ 2*zero_state)));
+     //val2 = ep*sin( 1.74533*current_angle + 5.2854);
       analogWrite(VREF2, abs(val2));  
       
       if (val2 >= 0)  {
@@ -4646,16 +4659,16 @@ void setpoint()
     
 
   }
-  else if (diff_angle < 0.0)  {
+  else if (diff_angle < -0.05)  {
     //while (diff_angle <= 0.05)  
-      current_angle += .2;
+      current_angle += FA;//.15;
       
        //digitalWrite(pulse, !digitalRead(pulse));
       PORTB ^= (B00010000); 
       
       
-      //val1 = ep*sin( (100*(current_angle*pi)/180) + .45+((pi/4)*(3+ 2*zero_state)));
-      val1 = ep*sin( 1.745*current_angle + 6.86);
+      val1 = U*sin( (100*(current_angle*pi)/180) + .45+((pi/4)*(3+ 2*zero_state)));
+      //val1 = ep*sin( 1.74533*current_angle + 6.8562);
       analogWrite(VREF1, abs(val1));
       
       if (val1 >= 0)  {
@@ -4670,8 +4683,8 @@ void setpoint()
         //digitalWrite(IN2, HIGH);
         PORTB |= (B00000010);
       }
-      //val2 = ep*sin( (100*(current_angle*pi)/180) + .45+((pi/4)*(1+ 2*zero_state)));
-      val2 = ep*sin( 1.745*current_angle + 5.29);
+      val2 = U*sin( (100*(current_angle*pi)/180) + .45+((pi/4)*(1+ 2*zero_state)));
+      //val2 = ep*sin( 1.74533*current_angle + 5.2854);
       analogWrite(VREF2, abs(val2));  
       
       if (val2 >= 0)  {
@@ -4701,11 +4714,11 @@ void setpoint()
 
   
   }
-  //else{
-  //analogWrite(VREF1, 0); 
-  //analogWrite(VREF2, 0);  
+  else{
+  analogWrite(VREF1, 0); 
+  analogWrite(VREF2, 0);  
   
-  //}
+  }
   //Serial.println(finish-start,DEC);
 
 }
