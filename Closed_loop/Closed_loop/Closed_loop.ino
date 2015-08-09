@@ -378,25 +378,14 @@ void follow()
 
 
 
-//__________________________________________________________________________
+//________________________________________________________________________
+
+
 
 
 void update_angle()
 {
-  
-  while (1){
-    
-    
-    ep=(-kp*diff_angle);
-  //U =abs(ep+ki*ei);
-  if (ep>256){
-    ep = 256;
-  }
-     if (Serial.available() > 0) {
-       new_angle=Serial.parseFloat();
-    }
-  a = readEncoder();
-  current_angle = lookup_angle(a);
+  new_angle=Serial.parseFloat();     
   diff_angle =(new_angle-current_angle);
   
   
@@ -404,8 +393,9 @@ void update_angle()
   
   
   if (diff_angle > 0.05)  {
-    //while (diff_angle >= 0.05)  
-     
+    while (diff_angle >= 0.05)  {
+      a = readEncoder();
+      current_angle = lookup_angle(a);
       Serial.print(current_angle,DEC);
       Serial.print(" , ");
       current_angle +=0.8;
@@ -425,7 +415,7 @@ void update_angle()
       
        digitalWrite(pulse, !digitalRead(pulse));
       
-      val1 = ep*sin( (100*(current_angle*pi)/180) + ((pi/4)*(3+ 2*zero_state)));
+      val1 = 200*sin( (100*(current_angle*pi)/180) + ((pi/4)*(3+ 2*zero_state)));
       analogWrite(VREF1, abs(val1));
       
       if (val1 >= 0)  {
@@ -436,7 +426,7 @@ void update_angle()
         digitalWrite(IN1, LOW);
         digitalWrite(IN2, HIGH);
       }
-      val2 = ep*sin( (100*(current_angle*pi)/180) + ((pi/4)*(1+ 2*zero_state)));
+      val2 = 200*sin( (100*(current_angle*pi)/180) + ((pi/4)*(1+ 2*zero_state)));
       analogWrite(VREF2, abs(val2));  
       
       if (val2 >= 0)  {
@@ -447,13 +437,16 @@ void update_angle()
         digitalWrite(IN3, LOW);
         digitalWrite(IN4, HIGH);
       }
-
+      
+      diff_angle =(new_angle-current_angle);  
     }
 
-  
+  }
   else if (diff_angle <= -0.05) {
-       // while (diff_angle <= -0.05)  
+        while (diff_angle <= -0.05)  {
           
+      a = readEncoder();
+      current_angle = lookup_angle(a);
       Serial.print(current_angle,DEC);
       Serial.print(" , ");
       
@@ -473,7 +466,7 @@ void update_angle()
       
        digitalWrite(pulse, !digitalRead(pulse));
       
-      val1 = ep*sin( (100*(current_angle*pi)/180) + ((pi/4)*(3+ 2*zero_state)));
+      val1 = 200*sin( (100*(current_angle*pi)/180) + ((pi/4)*(3+ 2*zero_state)));
       analogWrite(VREF1, abs(val1));
       
       if (val1 >= 0)  {
@@ -486,7 +479,7 @@ void update_angle()
       }
 
       
-      val2 = ep*sin( (100*(current_angle*pi)/180) + ((pi/4)*(1+ 2*zero_state)));
+      val2 = 200*sin( (100*(current_angle*pi)/180) + ((pi/4)*(1+ 2*zero_state)));
       analogWrite(VREF2, abs(val2));  
       
       if (val2 >= 0)  {
@@ -504,142 +497,16 @@ void update_angle()
 //      Serial.print(val1,DEC);
 //      Serial.print(" , ");
 //      Serial.println(val2,DEC);
-    
+      diff_angle =(new_angle-current_angle);  
+    }
 
+    
+    
   }
   a = readEncoder();
   Serial.println(a);
-  }
+
 }
-
-
-
-
-
-//void update_angle()
-//{
-//  new_angle=Serial.parseFloat();     
-//  diff_angle =(new_angle-current_angle);
-//  
-//  
-//
-//  
-//  
-//  if (diff_angle > 0.05)  {
-//    while (diff_angle >= 0.05)  {
-//      a = readEncoder();
-//      current_angle = lookup_angle(a);
-//      Serial.print(current_angle,DEC);
-//      Serial.print(" , ");
-//      current_angle +=0.8;
-//      
-//      
-//      
-//          
-//        Serial.print(current_angle,DEC);
-//      Serial.print(" , ");
-//      //Serial.print(val1,DEC);
-//      //Serial.print(" , ");
-//      Serial.println(lookup_angle(a),DEC);
-//      
-//      
-//      
-//      
-//      
-//       digitalWrite(pulse, !digitalRead(pulse));
-//      
-//      val1 = 200*sin( (100*(current_angle*pi)/180) + ((pi/4)*(3+ 2*zero_state)));
-//      analogWrite(VREF1, abs(val1));
-//      
-//      if (val1 >= 0)  {
-//        digitalWrite(IN1, HIGH);
-//        digitalWrite(IN2,LOW);
-//      }
-//      else  {
-//        digitalWrite(IN1, LOW);
-//        digitalWrite(IN2, HIGH);
-//      }
-//      val2 = 200*sin( (100*(current_angle*pi)/180) + ((pi/4)*(1+ 2*zero_state)));
-//      analogWrite(VREF2, abs(val2));  
-//      
-//      if (val2 >= 0)  {
-//        digitalWrite(IN3, HIGH);
-//        digitalWrite(IN4,LOW);
-//      }
-//      else  {
-//        digitalWrite(IN3, LOW);
-//        digitalWrite(IN4, HIGH);
-//      }
-//      
-//      diff_angle =(new_angle-current_angle);  
-//    }
-//
-//  }
-//  else if (diff_angle <= -0.05) {
-//        while (diff_angle <= -0.05)  {
-//          
-//      a = readEncoder();
-//      current_angle = lookup_angle(a);
-//      Serial.print(current_angle,DEC);
-//      Serial.print(" , ");
-//      
-//      current_angle -=0.8;
-//       
-//       
-//     
-//  
-//        Serial.print(current_angle,DEC);
-//      Serial.print(" , ");
-//
-//      Serial.println(lookup_angle(a),DEC);
-//      
-//      
-//      
-//      
-//      
-//       digitalWrite(pulse, !digitalRead(pulse));
-//      
-//      val1 = 200*sin( (100*(current_angle*pi)/180) + ((pi/4)*(3+ 2*zero_state)));
-//      analogWrite(VREF1, abs(val1));
-//      
-//      if (val1 >= 0)  {
-//        digitalWrite(IN1, HIGH);
-//        digitalWrite(IN2,LOW);
-//      }
-//      else  {
-//        digitalWrite(IN1, LOW);
-//        digitalWrite(IN2, HIGH);
-//      }
-//
-//      
-//      val2 = 200*sin( (100*(current_angle*pi)/180) + ((pi/4)*(1+ 2*zero_state)));
-//      analogWrite(VREF2, abs(val2));  
-//      
-//      if (val2 >= 0)  {
-//        digitalWrite(IN3, HIGH);
-//        digitalWrite(IN4,LOW);
-//      }
-//      else  {
-//        digitalWrite(IN3, LOW);
-//        digitalWrite(IN4, HIGH);
-//      }
-//      
-//      //delay(1);
-////      Serial.print(current_angle);
-////      Serial.print(" , ");
-////      Serial.print(val1,DEC);
-////      Serial.print(" , ");
-////      Serial.println(val2,DEC);
-//      diff_angle =(new_angle-current_angle);  
-//    }
-//
-//    
-//    
-//  }
-//  a = readEncoder();
-//  Serial.println(a);
-//
-//}
 
 
 //-----------------------------------------------------------------------
@@ -652,7 +519,7 @@ void setpoint()
   int finish = 0;
 
   
-  static float FA = 0.15x;
+  static float FA = 0.15;
   while(1){
     
     if (Serial.available() > 0) {
@@ -840,8 +707,8 @@ void one_step(){
 
   
       
-  analogWrite(VREF1, 144);  
-  analogWrite(VREF2, 144);  
+  analogWrite(VREF1, 64);  
+  analogWrite(VREF2, 64);  
     if (step_state == 0){
         digitalWrite(IN1, HIGH);
         digitalWrite(IN2, LOW);
