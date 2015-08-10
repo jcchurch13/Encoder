@@ -399,7 +399,7 @@ void update_angle()
       a = readEncoder();
       current_angle = lookup_angle(a);
       
-      //Serial.print(current_angle,DEC);
+      //Serial.println(current_angle,DEC);
      // Serial.print(" , ");
       
       if (diff_angle>0){
@@ -412,7 +412,7 @@ void update_angle()
       //Serial.print(current_angle,DEC);
       //Serial.print(" , ");
       //Serial.println(lookup_angle(a),DEC);
-      
+       Serial.println(current_angle,DEC);
       
         U =abs(kp*diff_angle);                  //control effort
         if (U>200){                             //saturation limits max current command
@@ -460,7 +460,7 @@ void setpoint()
       
       //Serial.print(current_angle,DEC);
      // Serial.print(" , ");
-      
+      Serial.println(current_angle,DEC); 
       if (diff_angle>0){
         current_angle +=0.7;
       }
