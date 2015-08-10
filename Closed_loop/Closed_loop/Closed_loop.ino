@@ -87,7 +87,7 @@ int OCF; //bit holding startup-valid bit
 int COF; //bit holding cordic DSP processing error data
 int LIN; //bit holding magnet field displacement error data
 int debug = 1; //SET THIS TO 0 TO DISABLE PRINTING OF ERROR CODES
-int shortdelay = 5; // this is the microseconds of delay in the data clock
+int shortdelay = 3; // this is the microseconds of delay in the data clock
 int longdelay = 1; // this is the milliseconds between readings
 
 
@@ -220,7 +220,7 @@ void loop()
         a = readEncoder();
         anglefloat = a * 0.08789;
         Serial.println(anglefloat,DEC);
-      delay(50);        
+      delay(10);        
       }
       delay(100);
       offset = readEncoder();
@@ -403,16 +403,16 @@ void update_angle()
      // Serial.print(" , ");
       
       if (diff_angle>0){
-        current_angle +=0.7;
+        current_angle +=0.5;
       }
       else{
-        current_angle -=0.7;
+        current_angle -=0.5;
       }
               
       //Serial.print(current_angle,DEC);
       //Serial.print(" , ");
       //Serial.println(lookup_angle(a),DEC);
-       Serial.println(current_angle,DEC);
+      //Serial.println(current_angle,DEC);
       
         U =abs(kp*diff_angle);                  //control effort
         if (U>200){                             //saturation limits max current command
@@ -460,7 +460,7 @@ void setpoint()
       
       //Serial.print(current_angle,DEC);
      // Serial.print(" , ");
-      Serial.println(current_angle,DEC); 
+     // Serial.println(current_angle,DEC); 
       if (diff_angle>0){
         current_angle +=0.7;
       }
@@ -745,7 +745,8 @@ void print_angle()
 void output(float theta,int effort){
   
   
-       val1 = effort*sin( ((spr/4.0)*(theta*pi)/180) + ((pi/4)*(3+ 2*zero_state)));
+      // ;val1 = effort*sin( ((spr/4.0)*(theta*pi)/180) + ((pi/4)*(3+ 2*zero_state)));
+      val1 = effort*sin( 1.74533*current_angle + 5.4978);
       analogWrite(VREF1, abs(val1));
       
       if (val1 >= 0)  {
@@ -762,7 +763,8 @@ void output(float theta,int effort){
       }
       
       
-      val2 = effort*sin( ((spr/4.0)*(theta*pi)/180) + ((pi/4)*(1+ 2*zero_state)));
+      //val2 = effort*sin( ((spr/4.0)*(theta*pi)/180) + ((pi/4)*(1+ 2*zero_state)));
+      val2 = effort*sin( 1.74533*current_angle + 3.927);
       analogWrite(VREF2, abs(val2));  
       
             if (val2 >= 0)  {
