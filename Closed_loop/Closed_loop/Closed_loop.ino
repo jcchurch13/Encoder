@@ -57,9 +57,9 @@ a  -  prompts user to enter angle
 const int spr = 200; //  400 steps per revolution
 const float aps = 360.0/spr;  // angle per step
 
-float kp = 40.0;
+float kp = 200.0;
 int ep = 0;
-float ki = 5.0;
+float ki = 0.2;
 float KF = 1.0;
 
 
@@ -471,51 +471,94 @@ void update_angle()
 
 //-----------------------------------------------------------------------
 
+
 void setpoint()
 { 
   
   static float ei =0.0; 
   int start =0;
   int finish = 0;
-  static int U = 0;
-  new_angle=Serial.parseFloat();     
-  diff_angle =(new_angle-current_angle);
+  static int U = 0;  //control effort
+  static float r = 0.0;  //setpoint
+  static float y = 0.0;  // measured angle
+  static float e = 0.0;  // e = r-y (error)
+  static float p = 0.0;  // proportional effort
+  static float i = 0.0;  // integral effort
+  static float PA = 0.0;  //
+  
+//  new_angle=Serial.parseFloat();     
+ // diff_angle =(new_angle-current_angle);
+
+    r=Serial.parseFloat();     
+  e =(r-y);
 
     
-  if (abs(diff_angle) > 0.05)  {
+  if (abs(e) > 0.05)  {
     while (1) {//(abs(diff_angle) >= 0.05)  
       
       a = readEncoder();
-      current_angle = lookup_angle(a);
+      y = lookup_angle(a);
       
       //Serial.print(current_angle,DEC);
      // Serial.print(" , ");
-      //Serial.println(current_angle,DEC); 
-      diff_angle =(new_angle-current_angle);  
-   if (diff_angle>0){
-        current_angle +=1.2;
+      Serial.println(y,DEC); 
+      e =(r-y);  
+//   if (e>0){
+//        y +=0.9;
+//      }
+//      else{
+//        y -=0.9;
+//      }
+
+      p=(kp*e);
+      i = i+ki*e;
+      if (i>1){
+      i = 1;
       }
-      else{
-        current_angle -=1.2;
+      else if (i <-1){
+        i = -1;
       }
-              
+
+
+
+    PA =(e*KF)+i;
+        if (PA>1.5){                          
+          PA = 1.5;
+        }
+        else if (PA<-1.5){
+          PA = -1.5;
+        }
+      //Serial.println(PA,DEC); 
+
+      y += PA;
+
+             
       //Serial.print(current_angle,DEC);
       //Serial.print(" , ");
       //Serial.println(lookup_angle(a),DEC);
-        ei = 0.95*(ei+diff_angle);
-      ep=(kp*diff_angle);
-      U =abs(ep+ki*ei);
-        if (U>150){                             //saturation limits max current command
-          U = 150;
-        }
+      //  ei = 0.95*(ei+diff_angle);
+
+
       
+      U =abs(p+i);
+     
+        if (U>200){                             //saturation limits max current command
+          U = 200;
+        }
+        else if (U<-200){
+          U = -200;
+        }
+
+      U = 200;
+
+
       
        //digitalWrite(pulse, !digitalRead(pulse));
              PORTB ^= (B00010000);     //PULSE 
        
-       output(current_angle,U);
+       output(y,U);
            if (Serial.available() > 0) {
-       new_angle=Serial.parseFloat();
+       r=Serial.parseFloat();
     }
 
       
@@ -527,6 +570,67 @@ void setpoint()
   Serial.println(a);
 
 }
+
+
+
+//
+//
+//void setpoint()
+//{ 
+//  
+//  static float ei =0.0; 
+//  int start =0;
+//  int finish = 0;
+//  static int U = 0;
+//  new_angle=Serial.parseFloat();     
+//  diff_angle =(new_angle-current_angle);
+//
+//    
+//  if (abs(diff_angle) > 0.05)  {
+//    while (1) {//(abs(diff_angle) >= 0.05)  
+//      
+//      a = readEncoder();
+//      current_angle = lookup_angle(a);
+//      
+//      //Serial.print(current_angle,DEC);
+//     // Serial.print(" , ");
+//      //Serial.println(current_angle,DEC); 
+//      diff_angle =(new_angle-current_angle);  
+//   if (diff_angle>0){
+//        current_angle +=1.2;
+//      }
+//      else{
+//        current_angle -=1.2;
+//      }
+//              
+//      //Serial.print(current_angle,DEC);
+//      //Serial.print(" , ");
+//      //Serial.println(lookup_angle(a),DEC);
+//        ei = 0.95*(ei+diff_angle);
+//      ep=(kp*diff_angle);
+//      U =abs(ep+ki*ei);
+//        if (U>150){                             //saturation limits max current command
+//          U = 150;
+//        }
+//      
+//      
+//       //digitalWrite(pulse, !digitalRead(pulse));
+//             PORTB ^= (B00010000);     //PULSE 
+//       
+//       output(current_angle,U);
+//           if (Serial.available() > 0) {
+//       new_angle=Serial.parseFloat();
+//    }
+//
+//      
+//    }
+//
+//  }
+//
+//  a = readEncoder();
+//  Serial.println(a);
+//
+//}
 
 
 //
