@@ -10,16 +10,16 @@ ____
     |
   13|-> LED 
   12|-> pulse         _
-  11|-> clock          \
-  10|->Chip Select      |---AS5145
-   9|->data           _/
-   8|->IN4             \
-   7|->IN3              \
-  ~6|->VREF2             \___A4954
-  ~5|->VREF1             /           
-   4|->IN2              /
-  ~3|->IN1            _/
-   2|
+  11|-> IN4            \
+  10|-> IN3             |---AS5145
+   9|-> IN2           _/
+   8|-> IN1             \
+   7|-> inputPin         \
+  ~6|-> VREF2             \___A4954    ---->3
+  ~5|-> VREF1             /           ----->11
+   4|->                  /
+  ~3|-> CSnPin         _/
+   2|-> clockPin
    1|
    0|
 ____|
@@ -57,10 +57,10 @@ a  -  prompts user to enter angle
 const int spr = 200; //  400 steps per revolution
 const float aps = 360.0/spr;  // angle per step
 
-float kp = 200.0;
+float kp = 100.0;
 int ep = 0;
-float ki = 0.2;
-float KF = 1.0;
+float ki =0.1;
+float KF = 0.8;
 
 
 int dir = 1;
@@ -147,6 +147,7 @@ const PROGMEM float lookup[] = {
 
 void setup() {
   Serial.begin(250000);
+  TCCR0B = (TCCR0B & 0b11111000) | 0x01;
   
   pinMode(VREF1, OUTPUT);
   pinMode(VREF2, OUTPUT);
@@ -501,7 +502,7 @@ void setpoint()
       
       //Serial.print(current_angle,DEC);
      // Serial.print(" , ");
-      Serial.println(y,DEC); 
+    //  Serial.println(y,DEC); 
       e =(r-y);  
 //   if (e>0){
 //        y +=0.9;
@@ -550,6 +551,9 @@ void setpoint()
         }
 
       U = 200;
+//      if (abs(e)<=0.1){
+//        U = 100;
+//      }
 
 
       
