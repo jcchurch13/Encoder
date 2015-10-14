@@ -7,17 +7,17 @@ Controlled via a SerialUSB terminal at 115200 baud.
 
 ____
     |
-  13|-> LED 
-  12|-> pulse         
-  11|-> IN_1            
-  10|-> IN_2            
-   9|-> IN_3           
-   8|-> IN_4             
-   7|-> inputPin         \
-  ~6|-> VREF_1             \___A4954    ---->3
-  ~5|-> VREF_2             /           ----->11
-   4|->                  /
-0006|-> chipSelectPin  _/
+0005|-> LED 
+0007|-> pulse         
+0009|-> IN_1            
+0010|-> IN_2            
+0012|-> IN_3           
+0011|-> IN_4             
+    |->                   \
+0008|-> VREF_1             \___A4954  
+0013|-> VREF_2            _/           
+   4|->                  
+0006|-> chipSelectPin  
    2|
     |
  SCK|-> clockPin
@@ -112,16 +112,16 @@ int val2 = 0;
 //////////////////////////////////////
 //////////////////PINS////////////////
 //////////////////////////////////////
-int IN_4 = 8;
-int IN_3 = 9;
-int VREF_2 = 5;
-int VREF_1 = 6;
+int IN_4 = 11;
+int IN_3 = 12;
+int VREF_2 = 13;
+int VREF_1 = 8;
 int IN_2 = 10;
-int IN_1 = 11;
-int pulse = 12;
+int IN_1 = 9;
+int pulse = 7;
 
 
-const int ledPin = 13; //LED connected to digital pin 13
+const int ledPin = 5; //LED connected to digital pin 13
 
 const int chipSelectPin = 6; //output to chip select
 
@@ -173,9 +173,9 @@ void setup() {
   digitalWrite(IN_1, LOW);
  
   pinMode(ledPin, OUTPUT); // visual signal of I/O to chip
-  pinMode(clockPin, OUTPUT); // SCK
+ // pinMode(clockPin, OUTPUT); // SCK
   pinMode(chipSelectPin, OUTPUT); // CSn -- has to toggle high and low to signal chip to start data transfer
-  pinMode(inputPin, INPUT); // SDA
+//  pinMode(inputPin, INPUT); // SDA
 
 
 
@@ -248,13 +248,14 @@ void loop()
     
     else if (inChar == 'z') {
       a = readEncoder();
-      anglefloat = a * 0.08789;
+      anglefloat = a * 0.02197265625;
       while (anglefloat >= aps){//0.9)
         one_step();
+        delay(100);//10); 
         a = readEncoder();
-        anglefloat = a * 0.08789;
+        anglefloat = a * 0.02197265625;
         SerialUSB.println(anglefloat,DEC);
-      delay(10);//10);        
+             
       }
       delay(100);
       offset = readEncoder();
@@ -265,7 +266,7 @@ void loop()
        for(int x = 0; x < spr; x++){
         one_step();
         a = readEncoder();
-        anglefloat = a * 0.08789;
+        anglefloat = a * 0.02197265625;
         //SerialUSB.print(i_step,DEC);
         //SerialUSB.print(" , ");
         //SerialUSB.print(i_step*0.9,DEC);
@@ -282,7 +283,7 @@ void loop()
         i_w = 2*x;
         //EEPROM.put(i_w,a);
         one_step();
-        anglefloat = a * 0.08789;
+        anglefloat = a * 0.02197265625;
         //SerialUSB.print(i_step,DEC);
         //SerialUSB.print(" , ");
         //SerialUSB.print(i_step*0.9,DEC);
@@ -298,7 +299,7 @@ void loop()
        
 //        EEPROM.get(i_r,a);
         
-        //anglefloat = a * 0.08789;
+        //anglefloat = a * 0.02197265625;
         //SerialUSB.print(i_step,DEC);
         //SerialUSB.print(" , ");
         //SerialUSB.print(i_step*0.9,DEC);
@@ -846,8 +847,8 @@ void one_step(){
 
   
   
-  SerialUSB.println(dir,DEC);
-  SerialUSB.println(step_state,DEC);
+ // SerialUSB.println(dir,DEC);
+ // SerialUSB.println(step_state,DEC);
 
   
       
@@ -884,9 +885,37 @@ void one_step(){
 
 
 void print_angle()
-{
-        a = readEncoder();
-        anglefloat = a * 0.08789;
+{       
+        a = 0;
+        delay(100);
+        a += readEncoder();
+        delay(10);
+         a += readEncoder();
+        delay(10);
+         a += readEncoder();
+        delay(10);
+         a += readEncoder();
+        delay(10);
+         a += readEncoder();
+        delay(10);
+         a += readEncoder();
+        delay(10);
+         a += readEncoder();
+        delay(10);
+         a += readEncoder();
+        delay(10);
+         a += readEncoder();
+        delay(10);
+         a += readEncoder();
+        delay(10);
+        a = a/10;
+        
+
+
+
+
+        
+        anglefloat = a * 0.02197265625;
         SerialUSB.print(i_step,DEC);
         SerialUSB.print(" , ");
         SerialUSB.print(i_step*aps,DEC);
@@ -917,18 +946,18 @@ void output(float theta,int effort){
       analogWrite(VREF_2, abs(val1));
       
       if (val1 >= 0)  {
-        //digitalWrite(IN_4, HIGH);
+        digitalWrite(IN_4, HIGH);
    //     PORTB |= (B00000001);
  
-        //digitalWrite(IN_3,LOW);
+        digitalWrite(IN_3,LOW);
     //    PORTB &= ~(B00000010);
 
       }
       else  {
-        //digitalWrite(IN_4, LOW);
+        digitalWrite(IN_4, LOW);
       //  PORTB &= ~(B00000001);
  
-        //digitalWrite(IN_3, HIGH);
+        digitalWrite(IN_3, HIGH);
     //    PORTB |= (B00000010);
  
       }
@@ -1041,7 +1070,7 @@ int readEncoder()
 ////SerialUSB.print("angledec: ");
 ////SerialUSB.println(angle, DEC);
 ////angle = angle * 0.3515; // angle * (360/1024) == actual degrees
-//  //anglefloat = angle * 0.08789; // angle * (360/4096) == actual degrees
+//  //anglefloat = angle * 0.02197265625; // angle * (360/4096) == actual degrees
 //  angletemp = angle;
 //  //SerialUSB.print("angle: "); // and, finally, print it.
 //  
