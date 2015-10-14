@@ -7,7 +7,7 @@ Controlled via a serial terminal at 115200 baud.
 
 
 ____
-    |
+    |  
   13|-> LED 
   12|-> pulse         _
   11|-> IN4            \
@@ -59,7 +59,8 @@ const float aps = 360.0/spr;  // angle per step
 
 float kp = 100.0;
 int ep = 0;
-float ki =0.1;
+float ki =0.1;//180
+
 float KF = 0.8;
 
 
