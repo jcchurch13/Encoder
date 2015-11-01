@@ -225,7 +225,7 @@ void loop()
   SerialUSB.available()) {
 
     char inChar = (char)SerialUSB.read();
-    inchar = 'y';   //        AUTO START IN Y MODE
+  //  inchar = 'y';   //        AUTO START IN Y MODE
     if (inChar == 'p') {
       print_angle();
       delay(50);
@@ -757,6 +757,14 @@ void setpoint()
       //       PORTB ^= (B00010000);     //PULSE 
        
        output(y,U);
+
+
+      analogWrite(3,map(u,-200,200,0,255));
+      analogWriteResolution(12);
+      analogWrite(4,(a>>2));
+      analogWriteResolution(8);
+
+
 //           if (SerialUSB.available() > 0) {
 //       r=SerialUSB.parseFloat();
 //    }
@@ -765,7 +773,7 @@ void setpoint()
 
     if (counter>10000)
     {
-      r = 270;
+      r = 110;
     }
 
     else
@@ -1305,7 +1313,7 @@ void sine()
      // e_1 = e;
       //u_1 = u;
 
-      u = 200* sin(0.01*counter);
+      u = 100* sin(0.015*counter);
     
       if (u>0){
         PA = 1.3;
