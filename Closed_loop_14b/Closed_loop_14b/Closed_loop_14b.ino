@@ -61,7 +61,7 @@ y  -  sine sweep
 const int spr = 200; //  400 steps per revolution
 const float aps = 360.0/spr;  // angle per step
 
-float kp = 100;
+float kp = 30;
 int ep = 0;
 float ki =0.1;//180
 
@@ -498,6 +498,8 @@ void setpoint()     //////////////////////////////////////////////////    SETPOI
   static float u = 0.0;
   static float u_1 = 0.0;
   static float e_1 = 0.0;
+    static float u_2 = 0.0;
+  static float e_2 = 0.0;
   static long counter= 0;
   
 //  new_angle=SerialUSB.parseFloat();     
@@ -555,7 +557,13 @@ void setpoint()     //////////////////////////////////////////////////    SETPOI
       //  ei = 0.95*(ei+diff_angle);
 
 
-      u = 0.7987*u_1 + kp*((10*e)-(9.799*e_1));
+ //     u = 0.7987*u_1 + kp*((10*e)-(9.799*e_1));     //////////////LOOKIN GOOD!
+//      e_1 = e;
+
+
+      u = 1.597*u_1 - 0.638*u_2 + kp*((1.817*e_1)-(1.776*e_2));     //////////////LOOKIN GOOD!
+      
+      e_2 = e_1;
       e_1 = e;
       //u_1 = u;
 
@@ -580,6 +588,7 @@ void setpoint()     //////////////////////////////////////////////////    SETPOI
         else if (u<-200){
           u = -200;
         }
+      u_2 = u_1;  
       u_1 = u;
        U =abs(u);///p);//+i);
 
