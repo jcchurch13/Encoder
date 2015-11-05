@@ -46,6 +46,8 @@ r  -  returns EEPROM contents
 
 a  -  prompts user to enter angle 
 
+y  -  sine sweep
+
 
 
 */
@@ -59,7 +61,7 @@ a  -  prompts user to enter angle
 const int spr = 200; //  400 steps per revolution
 const float aps = 360.0/spr;  // angle per step
 
-float kp = 50.0;
+float kp = 100;
 int ep = 0;
 float ki =0.1;//180
 
@@ -71,8 +73,6 @@ int step_state = 1;
 
 
 
-int inputstream = 0; //one bit read from pin
-long packeddata = 0; //two bytes concatenated from inputstream
 long angle = 0; //holds processed angle value
 long angletemp;
 float anglefloat = 0; 
@@ -80,18 +80,7 @@ float anglefloat = 0;
 int a = 0;  //angle value in zero routine
 float offset = 0.000000000000000; //zero-offest of closest full step
 
-//long anglemask = 65472; //0x1111111111000000: mask to obtain first 10 digits with position info
-long anglemask = 262080; // 0x111111111111000000: mask to obtain first 12 digits with position info
-long statusmask = 63; //0x000000000111111; mask to obtain last 6 digits containing status info
-long statusbits; //holds status/error information
-int DECn; //bit holding decreasing magnet field error data
-int INCn; //bit holding increasing magnet field error data
-int OCF; //bit holding startup-valid bit
-int COF; //bit holding cordic DSP processing error data
-int LIN; //bit holding magnet field displacement error data
-int debug = 1;//1; //SET THIS TO 0 TO DISABLE PRINTING OF ERROR CODES
-int shortdelay = 3;//3; // this is the microseconds of delay in the data clock
-int longdelay = 1; // this is the milliseconds between readings
+
 
 
 int i_step = 0; // step index
@@ -122,12 +111,14 @@ int pulse = 5;
 int sine_out = 3;
 int encoder_out= 4;
 
+int step_pin  = 1;
+int dir_pin = 2;
 
 const int ledPin = 5; //LED connected to digital pin 13
 
 const int chipSelectPin = 6; //output to chip select
 
-
+volatile long step_count =0;
 
 //////////////////////////////////////
 //////////////////////////////////////
@@ -153,7 +144,7 @@ const PROGMEM float lookup[] = {
 
 
 void setup() {
-  SerialUSB.begin(250000);
+  SerialUSB.begin(115200);
 
   while(!SerialUSB){};
       
@@ -166,6 +157,11 @@ void setup() {
   pinMode(IN_2, OUTPUT);
   pinMode(IN_1, OUTPUT);
   pinMode(pulse, OUTPUT);
+  pinMode(step_pin, INPUT);
+  pinMode(dir_pin, INPUT);
+
+  attachInterrupt(1,step_int, RISING);
+  
   
   
   analogWrite(VREF_2, 64);  
@@ -184,7 +180,7 @@ void setup() {
 
 
 
-    SPISettings settingsA(100000, MSBFIRST, SPI_MODE1); 
+    SPISettings settingsA(400000, MSBFIRST, SPI_MODE1); 
     
     SPI.begin();    //AS5047D SPI uses mode=1 (CPOL=0, CPHA=1)
     SerialUSB.println("Begin...");
@@ -356,6 +352,8 @@ void loop()
     }   
      update_angle();
     }
+
+    
   else if (inChar == 'l') {
      SerialUSB.println("Enter encoder count:");      //Prompt User for input
      while (SerialUSB.available()==0)  {     //Wait for new angle
@@ -364,6 +362,7 @@ void loop()
      angle_out= lookup_angle(a);
      SerialUSB.println(angle_out,DEC);
     }
+    
   else if (inChar == 'f') {
   follow();
   }
@@ -401,170 +400,13 @@ float lookup_angle(int n)
     return a_out;
 }
 
-//float lookup_sine(int m)
-//{
-//   float b_out; 
-//   
-//    m = (((m% 628)+628)%628);
-//   
-//   if (m>314){
-//   m =m-314;
-//     b_out = -pgm_read_float_near(sine_lookup+m);
-//  
-//   }
-//   else
-//   {
-//   b_out = pgm_read_float_near(sine_lookup+m);
-//   }
-//  //SerialUSB.println(angle_out,DEC);
-//    return b_out;
-//}
-
 
 
 //_____________________________________________________________________________
 
 void follow()
-{ 
-  
-  static float ei =0.0; 
-  int start =0;
-  int finish = 0;
-  static int U = 0;  //control effort
-  static float r = 0.0;  //setpoint
-  static float y = 0.0;  // measured angle
-  static float e = 0.0;  // e = r-y (error)
-  static float p = 0.0;  // proportional effort
-  static float i = 0.0;  // integral effort
-  static float PA = 0.0;  //
-
-  //  PA=SerialUSB.parseFloat();     
-
-    
-  
-    while (1) {//(abs(diff_angle) >= 0.05)  
-      
-      a = readEncoder();
-      y = lookup_angle(a);
-      
-      SerialUSB.print(y,DEC);
-      SerialUSB.print(" , ");
-      SerialUSB.println(PA,DEC); 
-     // e =(r-y);  
-//   if (e>0){
-//        y +=0.9;
-//      }
-//      else{
-//        y -=0.9;
-//      }
-
-//      p=(kp*e);
-//      i = i+ki*e;
-//      if (i>1){
-//      i = 1;
-//      }
-//      else if (i <-1){
-//        i = -1;
-//      }
-
-
-//
-//    PA =(e*KF)+i;
-//        if (PA>1.5){                          
-//          PA = 1.5;
-//        }
-//        else if (PA<-1.5){
-//          PA = -1.5;
-//        }
-//      //SerialUSB.println(PA,DEC); 
-//
-//      y += PA;
-
-             
-   //   SerialUSB.print(y,DEC);
-     // SerialUSB.print(" , ");
-   //   SerialUSB.println(e,DEC);
-      //  ei = 0.95*(ei+diff_angle);
-
-
-      
-//      U =abs(p+i);
-//     
-//        if (U>200){                             //saturation limits max current command
-//          U = 200;
-//        }
-//        else if (U<-200){
-//          U = -200;
-//        }
-//
-//      U = 200;
-////      if (abs(e)<=0.1){
-////        U = 100;
-////      }
-       
-       U = 64;
-        
-       digitalWrite(pulse, !digitalRead(pulse));
-      //       PORTB ^= (B00010000);     //PULSE 
-       
-       output(y+PA,U);
-           if (SerialUSB.available() > 0) {
-       PA=SerialUSB.parseFloat();
-    }
-
-      
-
-    }
- 
-
-  a = readEncoder();
-  SerialUSB.println(a);
-
-}
-
-
-
-//void follow()
-//{
-//  while (1) {
-//       a = readEncoder();
-//       current_angle= lookup_angle(a);
-//      
-//       digitalWrite(pulse, !digitalRead(pulse));
-//      
-//      val1 = 100*sin( ((spr/4.0)*(current_angle*pi)/180) + .45+((pi/4)*(3+ 2*zero_state)));
-//      analogWrite(VREF_2, abs(val1));
-//      
-//      if (val1 >= 0)  {
-//        digitalWrite(IN_4, HIGH);
-//        digitalWrite(IN_3,LOW);
-//      }
-//      else  {
-//        digitalWrite(IN_4, LOW);
-//        digitalWrite(IN_3, HIGH);
-//      }
-//      val2 = 100*sin( ((spr/4.0)*(current_angle*pi)/180) + .45+(((pi/4)*(1+ 2*zero_state))));
-//      analogWrite(VREF_1, abs(val2));  
-//      
-//      if (val2 >= 0)  {
-//        digitalWrite(IN_2, HIGH);
-//        digitalWrite(IN_1,LOW);
-//      }
-//      else  {
-//        digitalWrite(IN_2, LOW);
-//        digitalWrite(IN_1, HIGH);
-//      }
-//      
-//      
-//      //delay(1);
-//      SerialUSB.print(current_angle);
-//      SerialUSB.print(" , ");
-//      SerialUSB.print(val1,DEC);
-//      SerialUSB.print(" , ");
-//      SerialUSB.println(val2,DEC);
-//    }
-//
-//}
+{//insert modified setpoint code
+  }
 
 
 
@@ -635,10 +477,11 @@ void update_angle()     /////FOUND ISSUE: DIFF_ANGLE NEEDS TO BE COMPUTED BEFORE
 }
 
 
-//-----------------------------------------------------------------------
 
 
-void setpoint()
+
+
+void setpoint()     //////////////////////////////////////////////////    SETPOINT   ///////////////////////////////////////
 { 
   
   static float ei =0.0; 
@@ -683,7 +526,7 @@ void setpoint()
 //        y -=0.9;
 //      }
 
-     p=(kp*e);
+ //    p=(kp*e);///////////////////
 //      i = i+ki*e;
 //      if (i>1){
 //      i = 1;
@@ -695,6 +538,7 @@ void setpoint()
 //
 //
 //    PA =(e*KF)+i;
+
 //        if (PA>1.5){                          
 //          PA = 1.5;
 //        }
@@ -711,11 +555,11 @@ void setpoint()
       //  ei = 0.95*(ei+diff_angle);
 
 
-     // u = 0.9694*u_1 + kp*0.03062*(e);//- 0.99999*e_1);
-     // e_1 = e;
+      u = 0.7987*u_1 + kp*((10*e)-(9.799*e_1));
+      e_1 = e;
       //u_1 = u;
 
-      u = p;
+     // u = p;/////////////////////
     
       if (u>0){
         PA = 1.3;
@@ -736,7 +580,7 @@ void setpoint()
         else if (u<-200){
           u = -200;
         }
-      //u_1 = u;
+      u_1 = u;
        U =abs(u);///p);//+i);
 
      // U = 200;
@@ -765,28 +609,36 @@ void setpoint()
       analogWriteResolution(8);
 
 
-//           if (SerialUSB.available() > 0) {
-//       r=SerialUSB.parseFloat();
-//    }
-
-    counter +=1;
-
-    if (counter>10000)
-    {
-      r = 110;
+           if (SerialUSB.available() > 0) {         ///SERIAL UPDATE
+       r=SerialUSB.parseFloat();
     }
 
-    else
-    {
-      r = 90;
-    }
-    if (counter>20000)
-    {
-      counter = 0;
+
+
+
+//            counter +=1;                          ////COUNTER UPDATE
+//        
+//            if (counter>10000)
+//            {
+//              r = 110;
+//            }
+//        
+//            else
+//            {
+//              r = 90;
+//            }
+//            if (counter>20000)
+//            {
+//              counter = 0;
+//            }
+//        
+//            
+//            }
+
+
+   // r=0.1*step_count;                                 ///// STEP/DIR INPUTS
     }
 
-    
-    }
 
   }
 
@@ -797,247 +649,9 @@ void setpoint()
 
 
 
-//
-//
-//void setpoint()
-//{ 
-//  
-//  static float ei =0.0; 
-//  int start =0;
-//  int finish = 0;
-//  static int U = 0;
-//  new_angle=SerialUSB.parseFloat();     
-//  diff_angle =(new_angle-current_angle);
-//
-//    
-//  if (abs(diff_angle) > 0.05)  {
-//    while (1) {//(abs(diff_angle) >= 0.05)  
-//      
-//      a = readEncoder();
-//      current_angle = lookup_angle(a);
-//      
-//      //SerialUSB.print(current_angle,DEC);
-//     // SerialUSB.print(" , ");
-//      //SerialUSB.println(current_angle,DEC); 
-//      diff_angle =(new_angle-current_angle);  
-//   if (diff_angle>0){
-//        current_angle +=1.2;
-//      }
-//      else{
-//        current_angle -=1.2;
-//      }
-//              
-//      //SerialUSB.print(current_angle,DEC);
-//      //SerialUSB.print(" , ");
-//      //SerialUSB.println(lookup_angle(a),DEC);
-//        ei = 0.95*(ei+diff_angle);
-//      ep=(kp*diff_angle);
-//      U =abs(ep+ki*ei);
-//        if (U>150){                             //saturation limits max current command
-//          U = 150;
-//        }
-//      
-//      
-//       //digitalWrite(pulse, !digitalRead(pulse));
-//             PORTB ^= (B00010000);     //PULSE 
-//       
-//       output(current_angle,U);
-//           if (SerialUSB.available() > 0) {
-//       new_angle=SerialUSB.parseFloat();
-//    }
-//
-//      
-//    }
-//
-//  }
-//
-//  a = readEncoder();
-//  SerialUSB.println(a);
-//
-//}
 
 
-//
-//void setpoint()
-//{
-//  static float ei =0.0;    
-//  static int U = 0;
-//  int start =0;
-//  int finish = 0;
-//
-//  
-//  static float FA = 0.15;
-//  while(1){
-//    
-//    if (SerialUSB.available() > 0) {
-//       new_angle=SerialUSB.parseFloat();
-//    }
-//    
-//   start = micros();
-//    a = readEncoder();
-//finish = micros();
-//    
-//    
-//       current_angle= lookup_angle(a);
-//       ei = 0.95*(ei+diff_angle);
-//  diff_angle = -(new_angle-current_angle);
-//  SerialUSB.println(current_angle,DEC);
-// /*SerialUSB.print(current_angle,DEC);
-//  SerialUSB.print("  |  ") ;
-//  SerialUSB.print(ei,DEC);
-//  SerialUSB.print("  |  ") ;
-//  SerialUSB.print(FA,DEC);
-//  SerialUSB.print("  |  ") ;  
-//  SerialUSB.println(diff_angle,DEC);
-//  //delay(100);
-//*/ 
-//  ep=(kp*diff_angle);
-//  U =abs(ep+ki*ei);
-//  if (U>256){
-//    U = 256;
-//  }
-// // else if (U<25){
-// //   U = 25;
-// // }
-//  
-//  //FA = abs(diff_angle*KF);
-//  //if (FA>=0.1){
-//   FA=0.3 ;
-//  //}
-// // SerialUSB.println(current_angle);
-//  
-//  //digitalWrite(pulse, !digitalRead(pulse));
-//  
-// 
-// // SerialUSB.println(ep,DEC);
-//  if (diff_angle > 0.05)  {
-//    //while (diff_angle >= 0.05)  
-//      current_angle -= FA;//0.15;
-//      
-//       //digitalWrite(pulse, !digitalRead(pulse));
-//      PORTB ^= (B00010000); 
-//      
-//      ;
-//      val1 = U*sin( ((spr/4.0)*(current_angle*pi)/180)+((pi/4)*(3+ 2*zero_state)));
-//      //val1 = ep*sin( 1.74533*current_angle + 6.8562);
-//      
-//     
-//      analogWrite(VREF_2, abs(val1));
-//
-//      if (val1 >= 0)  {
-//        //digitalWrite(IN_4, HIGH);
-//        PORTB |= (B00000001);
-//        //digitalWrite(IN_3,LOW);
-//        PORTB &= ~(B00000010);
-//      }
-//      else  {
-//        //digitalWrite(IN_4, LOW);
-//        PORTB &= ~(B00000001);
-//        //digitalWrite(IN_3, HIGH);
-//        PORTB |= (B00000010);
-//      }
-//      val2 = U*sin( ((spr/4.0)*(current_angle*pi)/180) +((pi/4)*(1+ 2*zero_state)));
-//     //val2 = ep*sin( 1.74533*current_angle + 5.2854);
-//      analogWrite(VREF_1, abs(val2));  
-//      
-//      if (val2 >= 0)  {
-//        //digitalWrite(IN_2, HIGH);
-//        PORTB |= (B00000100);
-//        //digitalWrite(IN_1,LOW);
-//        PORTB &= ~(B00001000);
-//        
-//      }
-//      else  {
-//        //digitalWrite(IN_2, LOW);
-//        PORTB &= ~(B00000100);
-//        //digitalWrite(IN_1, HIGH);
-//        PORTB |= (B00001000);
-//        
-//      }
-//      
-//      
-//      //delay(1);
-//    //  SerialUSB.print(current_angle);
-//    //  SerialUSB.print(" , ");
-//    //  SerialUSB.print(val1,DEC);
-//    //  SerialUSB.print(" , ");
-//    //  SerialUSB.println(val2,DEC);
-//      //diff_angle =(new_angle-current_angle);  
-//    
-//
-//  }
-//  else if (diff_angle < -0.05)  {
-//    //while (diff_angle <= 0.05)  
-//      current_angle += FA;//.15;
-//      
-//       //digitalWrite(pulse, !digitalRead(pulse));
-//      PORTB ^= (B00010000); 
-//      
-//      
-//      val1 = U*sin( ((spr/4.0)*(current_angle*pi)/180) +((pi/4)*(3+ 2*zero_state)));
-//      //val1 = ep*sin( 1.74533*current_angle + 6.8562);
-//      analogWrite(VREF_2, abs(val1));
-//      
-//      if (val1 >= 0)  {
-//        //digitalWrite(IN_4, HIGH);
-//        PORTB |= (B00000001);
-//        //digitalWrite(IN_3,LOW);
-//        PORTB &= ~(B00000010);
-//      }
-//      else  {
-//        //digitalWrite(IN_4, LOW);
-//        PORTB &= ~(B00000001);
-//        //digitalWrite(IN_3, HIGH);
-//        PORTB |= (B00000010);
-//      }
-//      val2 = U*sin( ((spr/4.0)*(current_angle*pi)/180) +((pi/4)*(1+ 2*zero_state)));
-//      //val2 = ep*sin( 1.74533*current_angle + 5.2854);
-//      analogWrite(VREF_1, abs(val2));  
-//      
-//      if (val2 >= 0)  {
-//        //digitalWrite(IN_2, HIGH);
-//        PORTB |= (B00000100);
-//        //digitalWrite(IN_1,LOW);
-//        PORTB &= ~(B00001000);
-//        
-//      }
-//      else  {
-//        //digitalWrite(IN_2, LOW);
-//        PORTB &= ~(B00000100);
-//        //digitalWrite(IN_1, HIGH);
-//        PORTB |= (B00001000);
-//        
-//      }
-//      
-//      
-//      //delay(1);
-//    //  SerialUSB.print(current_angle);
-//    //  SerialUSB.print(" , ");
-//    //  SerialUSB.print(val1,DEC);
-//    //  SerialUSB.print(" , ");
-//    //  SerialUSB.println(val2,DEC);
-//      //diff_angle =(new_angle-current_angle);  
-//    
-//
-//  
-//  }
-//  else{
-//  analogWrite(VREF_2, 0); 
-//  analogWrite(VREF_1, 0);  
-//  
-//  }
-// // SerialUSB.println(finish-start,DEC);
-//
-//}
-//
-//}
-
-
-
-
-
-
-void one_step(){
+void one_step(){            /////////////////////////////////   ONE_STEP    ///////////////////////////////
 
   if (dir == 0) {
         i_step += 1;     
@@ -1086,7 +700,7 @@ void one_step(){
 }
 
 
-void print_angle()
+void print_angle()                ///////////////////////////////////       PRINT_ANGLE   /////////////////////////////////
 {       
         a = 0;
         delay(100);
@@ -1111,12 +725,7 @@ void print_angle()
          a += readEncoder();
         delay(10);
         a = a/10;
-        
 
-
-
-
-        
         anglefloat = a * 0.02197265625;
         SerialUSB.print(i_step,DEC);
         SerialUSB.print(" , ");
@@ -1129,7 +738,7 @@ void print_angle()
 }
 
 
-void output(float theta,int effort){
+void output(float theta,int effort){                      //////////////////////////////////////////   OUTPUT   ///////////////////
       static int start = 0;
       static int finish = 0;
       static int intangle;
@@ -1194,7 +803,7 @@ void output(float theta,int effort){
   
 }
 
-int readEncoder()
+int readEncoder()           //////////////////////////////////////////////////////   READENCODER   ////////////////////////////
 {
 
   digitalWrite(chipSelectPin, LOW);
@@ -1217,7 +826,7 @@ int readEncoder()
 
 
 
-float lookup_sine(int m)
+float lookup_sine(int m)        /////////////////////////////////////////////////  LOOKUP_SINE   /////////////////////////////
 {
    float b_out; 
    
@@ -1237,7 +846,7 @@ float lookup_sine(int m)
 }
 
 
-void sine()
+void sine()   ////////////////////////////////////////////////////////////////  SINE   //////////////////////////////
 { 
   
   static float ei =0.0; 
@@ -1378,4 +987,19 @@ void sine()
   SerialUSB.println(a);
 
 }
+
+
+void step_int() {
+  if(digitalRead(dir_pin))
+  {
+  step_count +=1;
+  }
+  else
+  {
+  step_count -=1;
+  }
+
+
+}
+
 
