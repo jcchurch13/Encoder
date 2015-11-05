@@ -58,10 +58,10 @@ y  -  sine sweep
 #include <avr/pgmspace.h>
 #include <SPI.h>
 
-const int spr = 200; //  400 steps per revolution
+const int spr = 500; //  400 steps per revolution
 const float aps = 360.0/spr;  // angle per step
 
-float kp = 30;
+float kp = 50;
 int ep = 0;
 float ki =0.1;//180
 
@@ -498,8 +498,10 @@ void setpoint()     //////////////////////////////////////////////////    SETPOI
   static float u = 0.0;
   static float u_1 = 0.0;
   static float e_1 = 0.0;
-    static float u_2 = 0.0;
+  static float u_2 = 0.0;
   static float e_2 = 0.0;
+  static float u_3 = 0.0;
+  static float e_3 = 0.0;
   static long counter= 0;
   
 //  new_angle=SerialUSB.parseFloat();     
@@ -557,12 +559,17 @@ void setpoint()     //////////////////////////////////////////////////    SETPOI
       //  ei = 0.95*(ei+diff_angle);
 
 
- //     u = 0.7987*u_1 + kp*((10*e)-(9.799*e_1));     //////////////LOOKIN GOOD!
+ //     u = 0.7987*u_1 + kp*((10*e)-(9.799*e_1));     //////////////LOOKIN GOOD!  Gain Like 100?...200
 //      e_1 = e;
 
 
-      u = 1.597*u_1 - 0.638*u_2 + kp*((1.817*e_1)-(1.776*e_2));     //////////////LOOKIN GOOD!
-      
+ //     u = 1.597*u_1 - 0.638*u_2 + kp*((1.817*e_1)-(1.776*e_2));     //////////////LOOKIN GOOD! with LPF (gain like 30)
+
+        u = 1.276*u_1 - 0.407*u_2 + kp*((2.943*e_1)-(2.812*e_2)); 
+
+     // u = 2.597*u_1 - 2.235*u_2 + 0.6378*u_3 + kp*((1.819*e_1)-(0.3593*e_2)+(0.1774*e_3));
+
+      e_3 = e_2;
       e_2 = e_1;
       e_1 = e;
       //u_1 = u;
@@ -588,6 +595,7 @@ void setpoint()     //////////////////////////////////////////////////    SETPOI
         else if (u<-200){
           u = -200;
         }
+        u_3 = u_2;
       u_2 = u_1;  
       u_1 = u;
        U =abs(u);///p);//+i);
@@ -618,9 +626,9 @@ void setpoint()     //////////////////////////////////////////////////    SETPOI
       analogWriteResolution(8);
 
 
-           if (SerialUSB.available() > 0) {         ///SERIAL UPDATE
-       r=SerialUSB.parseFloat();
-    }
+//           if (SerialUSB.available() > 0) {         ///SERIAL UPDATE
+//       r=SerialUSB.parseFloat();
+//    }
 
 
 
@@ -645,7 +653,7 @@ void setpoint()     //////////////////////////////////////////////////    SETPOI
 //            }
 
 
-   // r=0.1*step_count;                                 ///// STEP/DIR INPUTS
+    r=0.1*step_count;                                 ///// STEP/DIR INPUTS
     }
 
 
