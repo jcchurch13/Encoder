@@ -1,4 +1,5 @@
 /*
+ * 
 
 SAM21D18 (Arduino Zero compatible), AS5047 encoder, A4954 driver
 
@@ -120,13 +121,12 @@ const int chipSelectPin = 6; //output to chip select
 
 volatile long step_count = 0;
 
-//////////////////////////////////////
-//////////////////////////////////////
-//////////////////////////////////////
 
 
 float angle_out = 0.0;
 int zero_state = 0;
+
+
 
 
 const PROGMEM float sine_lookup[] = {
@@ -144,69 +144,70 @@ const PROGMEM float lookup[] = {
 
 
 
-void setup() {
-  SerialUSB.begin(115200);
 
+
+
+
+
+
+
+
+
+
+
+//////////////////////////////////////
+/////////////////SETUP/////////////////////
+//////////////////////////////////////
+
+
+
+
+
+
+
+
+
+
+
+
+
+void setup() {
+  
+  SerialUSB.begin(115200);
   while (!SerialUSB) {};
 
-  pinMode(VREF_2, OUTPUT);
-  pinMode(VREF_1, OUTPUT);
-  pinMode(IN_4, OUTPUT);
-  pinMode(IN_3, OUTPUT);
-  pinMode(IN_2, OUTPUT);
-  pinMode(IN_1, OUTPUT);
-  pinMode(pulse, OUTPUT);
-  pinMode(step_pin, INPUT);
-  pinMode(dir_pin, INPUT);
-
-  attachInterrupt(1, step_int, RISING);
-
-
-
-  analogWrite(VREF_2, 200);
-  analogWrite(VREF_1, 200);
-
-  digitalWrite(IN_4, HIGH);
-  digitalWrite(IN_3, LOW);
-  digitalWrite(IN_2, HIGH);
-  digitalWrite(IN_1, LOW);
-
-  pinMode(ledPin, OUTPUT); // visual signal of I/O to chip
-  // pinMode(clockPin, OUTPUT); // SCK
-  pinMode(chipSelectPin, OUTPUT); // CSn -- has to toggle high and low to signal chip to start data transfer
-  //  pinMode(inputPin, INPUT); // SDA
-
-
-
-
-  SPISettings settingsA(400000, MSBFIRST, SPI_MODE1);
-
-  SPI.begin();    //AS5047D SPI uses mode=1 (CPOL=0, CPHA=1)
-  SerialUSB.println("Begin...");
-  delay(1000);
-  SPI.beginTransaction(settingsA);
+  setupPins();
+  setupSPI();
 
   delay(1000);
-
-  //SerialUSB.print("DDRB , ");
-  //SerialUSB.println(DDRB,BIN);
-  //SerialUSB.print("DDRD , ");
-  //SerialUSB.println(DDRD,BIN);
-  // TCCR0B = (TCCR0B & 0b11111000) | 0x02;
-
-
-  //   SerialUSB.println(lookup_sine(-3140),DEC);
-  //   SerialUSB.println(lookup_sine(-2360),DEC);
-  //   SerialUSB.println(lookup_sine(-1570),DEC);
-  //   SerialUSB.println(lookup_sine(-79),DEC);
-  //   SerialUSB.println(lookup_sine(0),DEC);
-  //   SerialUSB.println(lookup_sine(79),DEC);
-  //   SerialUSB.println(lookup_sine(157),DEC);
-  //   SerialUSB.println(lookup_sine(236),DEC);
-  //   SerialUSB.println(lookup_sine(314),DEC);
-
 
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+//////////////////////////////////////
+/////////////////LOOP/////////////////////
+//////////////////////////////////////
+
+
+
+
+
+
+
+
+
 
 
 
@@ -283,49 +284,11 @@ void loop()
       }
     }
 
+
+
     else if (inChar == 'w') {
-      for (int x = 0; x < spr; x++) {
-
-
-        a = 0;
-        delay(1000);
-        a += readEncoder();
-        delay(10);
-        a += readEncoder();
-        delay(10);
-        a += readEncoder();
-        delay(10);
-        a += readEncoder();
-        delay(10);
-        a += readEncoder();
-        delay(10);
-        a += readEncoder();
-        delay(10);
-        a += readEncoder();
-        delay(10);
-        a += readEncoder();
-        delay(10);
-        a += readEncoder();
-        delay(10);
-        a += readEncoder();
-        delay(10);
-        a = a / 10;
-
-
-
-        i_w = 2 * x;
-        //EEPROM.put(i_w,a);
-        one_step();
-        anglefloat = a * 0.02197265625;
-        //SerialUSB.print(i_step,DEC);
-        //SerialUSB.print(" , ");
-        //SerialUSB.print(i_step*0.9,DEC);
-        //SerialUSB.print(" , ");
-        //SerialUSB.println(a-offset, DEC);
-        //  SerialUSB.println(anglefloat, DEC);
-        SerialUSB.println(a, DEC);
-        delay(100);
-      }
+      commandW();
+    
     }
     else if (inChar == 'r') {
       for (int x = 0; x < spr; x++) {
@@ -368,9 +331,7 @@ void loop()
 
 
     else if (inChar == 'x')  {
-      SerialUSB.println("Enter angle:");      //Prompt User for input
-      while (SerialUSB.available() == 0)  {   //Wait for new angle
-      }
+
       setpoint();
     }
 
@@ -386,6 +347,24 @@ void loop()
 
 
 }
+
+
+
+
+
+
+
+
+//////////////////////////////////////
+/////////////////FUNCTIONS/////////////////////
+//////////////////////////////////////
+
+
+
+
+
+
+
 
 
 
@@ -503,8 +482,17 @@ void setpoint()     //////////////////////////////////////////////////    SETPOI
   static float e_3 = 0.0;
   static long counter = 0;
 
+
+
+  SerialUSB.println("Enter angle:");      //Prompt User for input
+  while (SerialUSB.available() == 0)  {   //Wait for new angle
+      }
+
+
+      
   //  new_angle=SerialUSB.parseFloat();
   // diff_angle =(new_angle-current_angle);
+  
 
   r = SerialUSB.parseFloat();
   e = (r - y);
@@ -652,7 +640,7 @@ void setpoint()     //////////////////////////////////////////////////    SETPOI
                  // }
 
 
-    //   r=0.1*step_count;                                 ///// STEP/DIR INPUTS
+//       r=0.1*step_count;                                 ///// STEP/DIR INPUTS
     }
 
 
@@ -1019,3 +1007,95 @@ void step_int() {
 }
 
 
+
+
+
+void setupPins(){
+
+  pinMode(VREF_2, OUTPUT);
+  pinMode(VREF_1, OUTPUT);
+  pinMode(IN_4, OUTPUT);
+  pinMode(IN_3, OUTPUT);
+  pinMode(IN_2, OUTPUT);
+  pinMode(IN_1, OUTPUT);
+  pinMode(pulse, OUTPUT);
+  pinMode(step_pin, INPUT);
+  pinMode(dir_pin, INPUT);
+
+  attachInterrupt(1, step_int, RISING);
+
+
+
+  analogWrite(VREF_2, 200);
+  analogWrite(VREF_1, 200);
+
+  digitalWrite(IN_4, HIGH);
+  digitalWrite(IN_3, LOW);
+  digitalWrite(IN_2, HIGH);
+  digitalWrite(IN_1, LOW);
+
+  pinMode(ledPin, OUTPUT); // visual signal of I/O to chip
+  // pinMode(clockPin, OUTPUT); // SCK
+  pinMode(chipSelectPin, OUTPUT); // CSn -- has to toggle high and low to signal chip to start data transfer
+  //  pinMode(inputPin, INPUT); // SDA
+
+
+  
+}
+
+void setupSPI(){
+
+  SPISettings settingsA(400000, MSBFIRST, SPI_MODE1);
+
+  SPI.begin();    //AS5047D SPI uses mode=1 (CPOL=0, CPHA=1)
+  SerialUSB.println("Begin...");
+  delay(1000);
+  SPI.beginTransaction(settingsA);
+    
+}
+
+void commandW(){
+
+    for (int x = 0; x < spr; x++) {
+
+
+        a = 0;
+        delay(1000);
+        a += readEncoder();
+        delay(10);
+        a += readEncoder();
+        delay(10);
+        a += readEncoder();
+        delay(10);
+        a += readEncoder();
+        delay(10);
+        a += readEncoder();
+        delay(10);
+        a += readEncoder();
+        delay(10);
+        a += readEncoder();
+        delay(10);
+        a += readEncoder();
+        delay(10);
+        a += readEncoder();
+        delay(10);
+        a += readEncoder();
+        delay(10);
+        a = a / 10;
+
+
+
+        i_w = 2 * x;
+        //EEPROM.put(i_w,a);
+        one_step();
+        anglefloat = a * 0.02197265625;
+        //SerialUSB.print(i_step,DEC);
+        //SerialUSB.print(" , ");
+        //SerialUSB.print(i_step*0.9,DEC);
+        //SerialUSB.print(" , ");
+        //SerialUSB.println(a-offset, DEC);
+        //  SerialUSB.println(anglefloat, DEC);
+        SerialUSB.println(a, DEC);
+        delay(100);
+      }
+}
