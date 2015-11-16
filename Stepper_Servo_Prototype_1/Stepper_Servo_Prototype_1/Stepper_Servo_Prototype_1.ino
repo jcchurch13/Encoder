@@ -766,9 +766,9 @@ void output(float theta, int effort) {                    //////////////////////
   // val1 = effort*sin( ((spr/4.0)*(theta*pi)/180) + ((pi/4)*(6.5)));//(5+ 2*zero_state)));//3
 
   //floatangle = (100 * ( theta * 0.87266 + 5.1051) );
-  floatangle = (100 * ( theta * 0.87266 + 2.3562) );
+  floatangle = (10000 * ( theta * 0.87266 + 2.3562) );
   intangle = (int)floatangle;
-  modangle = (((intangle % 628) + 628) % 628);
+//  modangle = (((intangle % 628) + 628) % 628);
   val1 = effort * lookup_sine(intangle);
 
   analogWrite(VREF_2, abs(val1));
@@ -793,9 +793,9 @@ void output(float theta, int effort) {                    //////////////////////
   //val2 = effort*sin( 1.74533*current_angle + 3.927);
 
  // floatangle = (100 * (  theta * 0.87266 + 3.5343) );
-  floatangle = (100 * (  theta * 0.8726646 + 0.7854) );
+  floatangle = (10000 * (  theta * 0.8726646 + 0.7854) );
   intangle = (int)floatangle;
-  modangle = (((intangle % 628) + 628) % 628);
+ // modangle = (((intangle % 628) + 628) % 628);
   val2 = effort * lookup_sine(intangle);
 
   analogWrite(VREF_1, abs(val2));
@@ -848,7 +848,9 @@ float lookup_sine(int m)        ////////////////////////////////////////////////
 {
   float b_out;
 
-  m = (((m % 628) + 628) % 628);
+  m = (0.01*(((m % 62832) + 62832) % 62832))+0.5;  //+0.5 for rounding
+
+  SerialUSB.println(m);
 
   if (m > 314) {
     m = m - 314;
